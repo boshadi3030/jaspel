@@ -1,0 +1,35 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { SettingsProvider } from "@/lib/contexts/settings-context";
+import { LayoutWrapper } from "@/components/layout/LayoutWrapper";
+import { AuthErrorHandler } from "@/components/AuthErrorHandler";
+import { Toaster } from 'sonner';
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "JASPEL - Enterprise Incentive & KPI System",
+  description: "Sistem Manajemen Insentif dan KPI Berbasis P1, P2, P3",
+  icons: {
+    icon: '/favicon.svg',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="id" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
+        <AuthErrorHandler />
+        <SettingsProvider>
+          {children}
+        </SettingsProvider>
+        <Toaster position="top-right" richColors />
+      </body>
+    </html>
+  );
+}
