@@ -1,0 +1,29 @@
+   Γû▓ Next.js 15.5.12
+   - Local:        http://localhost:3002
+   - Network:      http://192.168.1.121:3002
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ┬╖ serverActions
+     ┬╖ optimizePackageImports
+
+ Γ£ô Starting...
+ Γ£ô Ready in 4.4s
+ Γùï Compiling /middleware ...
+ Γ£ô Compiled /middleware in 2.2s (505 modules)
+ Γùï Compiling /login ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (133kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ Γ£ô Compiled /login in 9.5s (1497 modules)
+ GET /login 200 in 10607ms
+ Γ£ô Compiled in 1070ms (665 modules)
+ Γùï Compiling /kpi-config ...
+ Γ£ô Compiled /kpi-config in 3.2s (1750 modules)
+ GET /kpi-config 200 in 4048ms
+ Γùï Compiling /api/notifications ...
+ Γ£ô Compiled /api/notifications in 24s (2165 modules)
+ GET /api/notifications?unreadOnly=true 200 in 38229ms
+ GET /api/notifications?unreadOnly=true 200 in 25672ms
+ GET /api/notifications?unreadOnly=true 200 in 972ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /kpi-config 200 in 8507ms
+ GET /api/notifications?unreadOnly=true 200 in 1198ms
+ GET /api/notifications?unreadOnly=true 200 in 565ms

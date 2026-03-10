@@ -15,6 +15,7 @@ const KPITree = dynamic(() => import('@/components/kpi/KPITree'), {
 })
 const CategoryFormDialog = dynamic(() => import('@/components/kpi/CategoryFormDialog'))
 const IndicatorFormDialog = dynamic(() => import('@/components/kpi/IndicatorFormDialog'))
+const SubIndicatorFormDialog = dynamic(() => import('@/components/kpi/SubIndicatorFormDialog'))
 const CopyStructureDialog = dynamic(() => import('@/components/kpi/CopyStructureDialog'))
 
 interface Unit {
@@ -45,17 +46,43 @@ interface KPIIndicator {
   is_active: boolean
 }
 
+interface KPISubIndicator {
+  id: string
+  indicator_id: string
+  code: string
+  name: string
+  target_value: number
+  weight_percentage: number
+  score_1: number
+  score_2: number
+  score_3: number
+  score_4: number
+  score_5: number
+  score_1_label: string
+  score_2_label: string
+  score_3_label: string
+  score_4_label: string
+  score_5_label: string
+  measurement_unit: string | null
+  description: string | null
+  is_active: boolean
+}
+
 export default function KPIConfigPage() {
   const [units, setUnits] = useState<Unit[]>([])
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null)
   const [categories, setCategories] = useState<KPICategory[]>([])
   const [indicators, setIndicators] = useState<KPIIndicator[]>([])
+  const [subIndicators, setSubIndicators] = useState<KPISubIndicator[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
   const [isIndicatorDialogOpen, setIsIndicatorDialogOpen] = useState(false)
+  const [isSubIndicatorDialogOpen, setIsSubIndicatorDialogOpen] = useState(false)
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<KPICategory | null>(null)
   const [selectedIndicator, setSelectedIndicator] = useState<KPIIndicator | null>(null)
+  const [selectedSubIndicator, setSelectedSubIndicator] = useState<KPISubIndicator | null>(null)
+  const [selectedIndicatorForSub, setSelectedIndicatorForSub] = useState<KPIIndicator | null>(null)
 
   const loadUnits = useCallback(async () => {
     try {
@@ -105,8 +132,24 @@ export default function KPIConfigPage() {
 
         if (indicatorsError) throw indicatorsError
         setIndicators(indicatorsData || [])
+
+        // Load sub indicators
+        const indicatorIds = indicatorsData?.map(i => i.id) || []
+        if (indicatorIds.length > 0) {
+          const { data: subIndicatorsData, error: subIndicatorsError } = await supabase
+            .from('m_kpi_sub_indicators')
+            .select('*')
+            .in('indicator_id', indicatorIds)
+            .order('code')
+
+          if (subIndicatorsError) throw subIndicatorsError
+          setSubIndicators(subIndicatorsData || [])
+        } else {
+          setSubIndicators([])
+        }
       } else {
         setIndicators([])
+        setSubIndicators([])
       }
     } catch (error) {
       console.error('Error loading KPI structure:', error)
@@ -146,11 +189,26 @@ export default function KPIConfigPage() {
     setIsIndicatorDialogOpen(true)
   }, [])
 
+  const handleAddSubIndicator = useCallback((indicatorId: string) => {
+    const ind = indicators.find(i => i.id === indicatorId) || null
+    setSelectedIndicatorForSub(ind)
+    setSelectedSubIndicator(null)
+    setIsSubIndicatorDialogOpen(true)
+  }, [indicators])
+
+  const handleEditSubIndicator = useCallback((subIndicator: KPISubIndicator) => {
+    // Find parent indicator for context
+    const parentIndicator = indicators.find(i => i.id === subIndicator.indicator_id) || null
+    setSelectedIndicatorForSub(parentIndicator)
+    setSelectedSubIndicator(subIndicator)
+    setIsSubIndicatorDialogOpen(true)
+  }, [indicators])
+
   const handleDeleteCategory = useCallback(async (categoryId: string) => {
     const categoryIndicators = indicators.filter(i => i.category_id === categoryId)
 
     if (categoryIndicators.length > 0) {
-      if (!confirm('Kategori ini memiliki indikator. Menghapusnya akan menghapus semua indikator. Lanjutkan?')) {
+      if (!confirm('Kategori ini memiliki indikator. Menghapusnya akan menghapus semua indikator dan sub indikator. Lanjutkan?')) {
         return
       }
     }
@@ -187,6 +245,10 @@ export default function KPIConfigPage() {
       if (!confirm('Indikator ini memiliki data realisasi. Penghapusan akan mempengaruhi perhitungan historis. Lanjutkan?')) {
         return
       }
+    } else {
+      if (!confirm('Hapus indikator ini beserta semua sub indikatornya? Tindakan ini tidak dapat dibatalkan.')) {
+        return
+      }
     }
 
     try {
@@ -200,6 +262,26 @@ export default function KPIConfigPage() {
     } catch (error) {
       console.error('Error deleting indicator:', error)
       alert('Gagal menghapus indikator')
+    }
+  }, [loadKPIStructure])
+
+  const handleDeleteSubIndicator = useCallback(async (subIndicatorId: string) => {
+    if (!confirm('Hapus sub indikator ini? Tindakan ini tidak dapat dibatalkan.')) {
+      return
+    }
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('m_kpi_sub_indicators')
+        .delete()
+        .eq('id', subIndicatorId)
+
+      if (error) throw error
+      await loadKPIStructure()
+    } catch (error) {
+      console.error('Error deleting sub indicator:', error)
+      alert('Gagal menghapus sub indikator')
     }
   }, [loadKPIStructure])
 
@@ -230,24 +312,24 @@ export default function KPIConfigPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Konfigurasi KPI</h1>
-          <p className="text-gray-600 mt-1">Konfigurasi kategori dan indikator KPI untuk setiap unit</p>
+          <p className="text-gray-600 mt-1">Konfigurasi kategori, indikator, dan sub indikator KPI untuk setiap unit</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            onClick={handleDownloadGuide} 
+          <Button
+            onClick={handleDownloadGuide}
             className="bg-purple-500 hover:bg-purple-600 text-white shadow-md hover:shadow-lg transition-all"
           >
             <Download className="h-4 w-4 mr-2" />
             Unduh Petunjuk PDF
           </Button>
-          <Button 
-            onClick={handleCopyStructure} 
+          <Button
+            onClick={handleCopyStructure}
             className="bg-cyan-500 hover:bg-cyan-600 text-white shadow-md hover:shadow-lg transition-all"
           >
             <Copy className="h-4 w-4 mr-2" />
             Salin Struktur
           </Button>
-          <Button 
+          <Button
             onClick={handleAddCategory}
             className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
           >
@@ -276,8 +358,8 @@ export default function KPIConfigPage() {
             </SelectTrigger>
             <SelectContent className="max-h-80">
               {units.map(unit => (
-                <SelectItem 
-                  key={unit.id} 
+                <SelectItem
+                  key={unit.id}
                   value={unit.id}
                   className="text-base py-3 cursor-pointer hover:bg-blue-50 focus:bg-blue-100"
                 >
@@ -298,7 +380,7 @@ export default function KPIConfigPage() {
           <CardHeader>
             <CardTitle>Struktur KPI</CardTitle>
             <CardDescription>
-              Kategori (P1, P2, P3) dan indikator-indikatornya
+              Kategori (P1, P2, P3) → Indikator → Sub Indikator (dengan nilai skor)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -312,11 +394,15 @@ export default function KPIConfigPage() {
               <KPITree
                 categories={categories}
                 indicators={indicators}
+                subIndicators={subIndicators}
                 onEditCategory={handleEditCategory}
                 onDeleteCategory={handleDeleteCategory}
                 onAddIndicator={handleAddIndicator}
                 onEditIndicator={handleEditIndicator}
                 onDeleteIndicator={handleDeleteIndicator}
+                onAddSubIndicator={handleAddSubIndicator}
+                onEditSubIndicator={handleEditSubIndicator}
+                onDeleteSubIndicator={handleDeleteSubIndicator}
               />
             )}
           </CardContent>
@@ -339,6 +425,15 @@ export default function KPIConfigPage() {
         indicator={selectedIndicator}
         category={selectedCategory}
         existingIndicators={indicators.filter(i => i.category_id === selectedCategory?.id)}
+        onSuccess={loadKPIStructure}
+      />
+
+      <SubIndicatorFormDialog
+        open={isSubIndicatorDialogOpen}
+        onOpenChange={setIsSubIndicatorDialogOpen}
+        subIndicator={selectedSubIndicator}
+        indicator={selectedIndicatorForSub}
+        existingSubIndicators={subIndicators.filter(s => s.indicator_id === selectedIndicatorForSub?.id)}
         onSuccess={loadKPIStructure}
       />
 

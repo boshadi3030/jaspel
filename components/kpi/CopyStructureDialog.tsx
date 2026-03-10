@@ -103,7 +103,7 @@ export default function CopyStructureDialog({
 
       // Copy categories
       const categoryMapping: Record<string, string> = {}
-      
+
       for (const category of sourceCategories) {
         const { data: newCategory, error: insertError } = await supabase
           .from('m_kpi_categories')
@@ -131,27 +131,71 @@ export default function CopyStructureDialog({
 
       if (indicatorsError) throw indicatorsError
 
-      // Copy indicators
+      // Copy indicators and track mapping
+      const indicatorMapping: Record<string, string> = {}
+
       if (sourceIndicators && sourceIndicators.length > 0) {
-        const indicatorsToInsert = sourceIndicators.map(indicator => ({
-          category_id: categoryMapping[indicator.category_id],
-          code: indicator.code,
-          name: indicator.name,
-          target_value: indicator.target_value,
-          weight_percentage: indicator.weight_percentage,
-          measurement_unit: indicator.measurement_unit,
-          description: indicator.description,
-          is_active: indicator.is_active
-        }))
+        for (const indicator of sourceIndicators) {
+          const { data: newIndicator, error: insertError } = await supabase
+            .from('m_kpi_indicators')
+            .insert({
+              category_id: categoryMapping[indicator.category_id],
+              code: indicator.code,
+              name: indicator.name,
+              target_value: indicator.target_value,
+              weight_percentage: indicator.weight_percentage,
+              measurement_unit: indicator.measurement_unit,
+              description: indicator.description,
+              is_active: indicator.is_active
+            })
+            .select()
+            .single()
 
-        const { error: insertIndicatorsError } = await supabase
-          .from('m_kpi_indicators')
-          .insert(indicatorsToInsert)
+          if (insertError) throw insertError
+          indicatorMapping[indicator.id] = newIndicator.id
+        }
 
-        if (insertIndicatorsError) throw insertIndicatorsError
+        // Get source sub indicators
+        const sourceIndicatorIds = sourceIndicators.map(i => i.id)
+        const { data: sourceSubIndicators, error: subIndicatorsError } = await supabase
+          .from('m_kpi_sub_indicators')
+          .select('*')
+          .in('indicator_id', sourceIndicatorIds)
+
+        if (subIndicatorsError) throw subIndicatorsError
+
+        // Copy sub indicators
+        if (sourceSubIndicators && sourceSubIndicators.length > 0) {
+          const subIndicatorsToInsert = sourceSubIndicators.map(sub => ({
+            indicator_id: indicatorMapping[sub.indicator_id],
+            code: sub.code,
+            name: sub.name,
+            target_value: sub.target_value,
+            weight_percentage: sub.weight_percentage,
+            score_1: sub.score_1,
+            score_2: sub.score_2,
+            score_3: sub.score_3,
+            score_4: sub.score_4,
+            score_5: sub.score_5,
+            score_1_label: sub.score_1_label,
+            score_2_label: sub.score_2_label,
+            score_3_label: sub.score_3_label,
+            score_4_label: sub.score_4_label,
+            score_5_label: sub.score_5_label,
+            measurement_unit: sub.measurement_unit,
+            description: sub.description,
+            is_active: sub.is_active
+          }))
+
+          const { error: insertSubError } = await supabase
+            .from('m_kpi_sub_indicators')
+            .insert(subIndicatorsToInsert)
+
+          if (insertSubError) throw insertSubError
+        }
       }
 
-      alert('Struktur KPI berhasil disalin!')
+      alert('Struktur KPI berhasil disalin (termasuk sub indikator)!')
       onSuccess()
       onOpenChange(false)
     } catch (error: any) {
@@ -219,7 +263,7 @@ export default function CopyStructureDialog({
 
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              Ini akan menyalin semua kategori (P1, P2, P3) dan indikatornya beserta bobotnya dari unit sumber ke unit tujuan.
+              Ini akan menyalin semua kategori (P1, P2, P3), indikator, dan sub indikator (beserta nilai skor) dari unit sumber ke unit tujuan.
               Jika unit tujuan sudah memiliki struktur KPI, struktur tersebut akan diganti.
             </p>
           </div>
