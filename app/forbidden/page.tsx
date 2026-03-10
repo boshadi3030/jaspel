@@ -15,23 +15,23 @@ export default function ForbiddenPage() {
           <div className="flex justify-center mb-4">
             <ShieldAlert className="h-16 w-16 text-red-500" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">403 Akses Ditolak</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">403 - Akses Ditolak</CardTitle>
           <CardDescription className="text-center">
             Anda tidak memiliki izin untuk mengakses halaman ini
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-gray-600 text-center">
-            Halaman ini dibatasi untuk pengguna dengan izin khusus. Jika Anda yakin seharusnya memiliki akses, silakan hubungi administrator.
+            Halaman ini dibatasi untuk pengguna dengan izin khusus. Jika Anda yakin seharusnya memiliki akses, silakan hubungi administrator sistem.
           </p>
           
           <div className="flex gap-2">
             <Button
-              onClick={() => router.back()}
+              onClick={() => router.push('/dashboard')}
               variant="outline"
               className="flex-1"
             >
-              Kembali
+              Ke Dashboard
             </Button>
             <Button
               onClick={() => router.push('/login')}

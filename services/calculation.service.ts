@@ -190,6 +190,9 @@ export async function calculateFinalDistribution(period: string) {
   
   if (poolError) throw poolError
   if (!pool) throw new Error('Pool not found for this period')
+  if (pool.allocated_amount === null || pool.allocated_amount === undefined) {
+    throw new Error('Pool allocated amount is not calculated. Please ensure pool has revenue and deduction data.')
+  }
   
   // Get all units with their proportions
   const { data: units, error: unitsError } = await supabase

@@ -1,15 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { type UserWithPegawai } from '@/app/admin/users/actions'
+import { type UserWithPegawai } from '@/app/(authenticated)/users/actions'
 import { deactivateUser } from '@/lib/services/user-management.service'
 import { Button } from '@/components/ui/button'
-import { Edit, Ban, CheckCircle } from 'lucide-react'
+import { Edit, Ban, CheckCircle, Trash2 } from 'lucide-react'
 
 interface UserTableProps {
   users: UserWithPegawai[]
   loading: boolean
   onEdit: (user: UserWithPegawai) => void
+  onDelete: (user: UserWithPegawai) => void
   onRefresh: () => void
 }
 
@@ -19,7 +20,7 @@ const roleLabels: Record<string, string> = {
   employee: 'Pegawai'
 }
 
-export function UserTable({ users, loading, onEdit, onRefresh }: UserTableProps) {
+export function UserTable({ users, loading, onEdit, onDelete, onRefresh }: UserTableProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   
   const handleDeactivate = async (user: UserWithPegawai) => {
@@ -113,6 +114,16 @@ export function UserTable({ users, loading, onEdit, onRefresh }: UserTableProps)
                     <Ban className="h-4 w-4" />
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onDelete(user)}
+                  disabled={actionLoading === user.id}
+                  title="Hapus"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </td>
             </tr>
           ))}

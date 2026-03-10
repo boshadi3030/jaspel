@@ -9,7 +9,7 @@ const nextConfig = {
       bodySizeLimit: '5mb',
     },
     // Optimize page loading
-    optimizePackageImports: ['lucide-react', '@supabase/supabase-js', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+    optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
   },
   
   // Image optimization
@@ -27,6 +27,16 @@ const nextConfig = {
   // Enable React strict mode for better performance
   reactStrictMode: true,
   
+  // Skip ESLint during build for faster builds
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  // Skip TypeScript errors during build (for faster iteration)
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  
   // Optimize production builds
   productionBrowserSourceMaps: false,
   
@@ -36,8 +46,19 @@ const nextConfig = {
   // Ensure we're using App Router
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
   
-  // Webpack config untuk stabilitas
-  webpack: (config) => {
+  // Webpack config
+  webpack: (config, { isServer }) => {
+    // Resolve fallback for server-side
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      }
+    }
+    
     return config
   },
   

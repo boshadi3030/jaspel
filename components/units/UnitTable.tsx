@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Edit, Trash2, Power, PowerOff, Plus } from 'lucide-react'
+import { Edit, Trash2, Power, PowerOff, Plus, Download, Upload, FileSpreadsheet, FileText } from 'lucide-react'
 import { UnitFormDialog } from './UnitFormDialog'
 import { DeleteUnitDialog } from './DeleteUnitDialog'
 import { createClient } from '@/lib/supabase/client'
@@ -73,10 +73,92 @@ export function UnitTable({ units }: UnitTableProps) {
     return unit.employees?.[0]?.count || 0
   }
   
+  const handleDownloadTemplate = () => {
+    window.open('/api/units/template', '_blank')
+  }
+  
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    try {
+      const response = await fetch('/api/units/import', {
+        method: 'POST',
+        body: formData,
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        alert(`Import berhasil!\nBerhasil: ${result.success}\nGagal: ${result.failed}${result.errors.length > 0 ? '\n\nError:\n' + result.errors.join('\n') : ''}`)
+        window.location.reload()
+      } else {
+        alert(`Import gagal: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Import error:', error)
+      alert('Terjadi kesalahan saat import')
+    }
+    
+    // Reset input
+    event.target.value = ''
+  }
+  
+  const handleDownloadReport = (format: 'excel' | 'pdf') => {
+    window.open(`/api/units/export?format=${format}`, '_blank')
+  }
+  
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button onClick={handleAdd}>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleDownloadTemplate}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Unduh Template
+          </Button>
+          
+          <Button 
+            onClick={() => document.getElementById('import-units')?.click()}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Import Data
+          </Button>
+          <input
+            id="import-units"
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleImport}
+            className="hidden"
+          />
+          
+          <Button 
+            onClick={() => handleDownloadReport('excel')}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Unduh Excel
+          </Button>
+          
+          <Button 
+            onClick={() => handleDownloadReport('pdf')}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Unduh PDF
+          </Button>
+        </div>
+        
+        <Button 
+          onClick={handleAdd}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Tambah Unit
         </Button>

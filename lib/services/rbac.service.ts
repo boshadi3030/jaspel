@@ -88,80 +88,60 @@ export interface RoutePermission {
 }
 
 export const routePermissions: RoutePermission[] = [
-  // Admin routes
+  // Dashboard - accessible by all roles
   {
-    path: '/admin/dashboard',
-    permissions: ['users:read', 'units:read'],
-    roles: ['superadmin'],
+    path: '/dashboard',
+    permissions: ['profile:read'],
+    roles: ['superadmin', 'unit_manager', 'employee'],
   },
+  
+  // Superadmin only routes
   {
-    path: '/admin/users',
+    path: '/users',
     permissions: ['users:read'],
     roles: ['superadmin'],
   },
   {
-    path: '/admin/pegawai',
+    path: '/pegawai',
     permissions: ['users:read'],
     roles: ['superadmin'],
   },
   {
-    path: '/admin/units',
+    path: '/units',
     permissions: ['units:read'],
     roles: ['superadmin'],
   },
   {
-    path: '/admin/kpi-config',
+    path: '/kpi-config',
     permissions: ['kpi:read'],
     roles: ['superadmin'],
   },
   {
-    path: '/admin/pool',
+    path: '/pool',
     permissions: ['pool:read'],
     roles: ['superadmin'],
   },
   {
-    path: '/admin/settings',
+    path: '/settings',
     permissions: ['settings:read'],
     roles: ['superadmin'],
   },
   {
-    path: '/admin/audit',
+    path: '/audit',
     permissions: ['audit:read'],
     roles: ['superadmin'],
   },
   {
-    path: '/admin/reports',
+    path: '/reports',
     permissions: ['reports:view'],
     roles: ['superadmin'],
   },
 
   // Manager routes
   {
-    path: '/manager/dashboard',
-    permissions: ['realization:read'],
-    roles: ['unit_manager'],
-  },
-  {
-    path: '/manager/realization',
+    path: '/realization',
     permissions: ['realization:read', 'realization:create'],
     roles: ['unit_manager'],
-  },
-  {
-    path: '/manager/reports',
-    permissions: ['reports:view'],
-    roles: ['unit_manager'],
-  },
-
-  // Employee routes
-  {
-    path: '/employee/dashboard',
-    permissions: ['calculation:view'],
-    roles: ['employee'],
-  },
-  {
-    path: '/employee/reports',
-    permissions: ['reports:view'],
-    roles: ['employee'],
   },
 
   // Shared routes
@@ -253,69 +233,69 @@ export function getMenuItemsForRole(role: Role): MenuItem[] {
   const allMenuItems: MenuItem[] = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
-      path: role === 'superadmin' ? '/admin/dashboard' : role === 'unit_manager' ? '/manager/dashboard' : '/employee/dashboard',
+      label: 'Dasbor',
+      path: '/dashboard',
       icon: 'LayoutDashboard',
+    },
+    {
+      id: 'units',
+      label: 'Manajemen Unit',
+      path: '/units',
+      icon: 'Building2',
     },
     {
       id: 'users',
       label: 'Manajemen Pengguna',
-      path: '/admin/users',
+      path: '/users',
       icon: 'Users',
     },
     {
       id: 'pegawai',
       label: 'Master Pegawai',
-      path: '/admin/pegawai',
-      icon: 'Users',
-    },
-    {
-      id: 'units',
-      label: 'Manajemen Unit',
-      path: '/admin/units',
-      icon: 'Building2',
+      path: '/pegawai',
+      icon: 'UserCheck',
     },
     {
       id: 'kpi',
       label: 'Konfigurasi KPI',
-      path: '/admin/kpi-config',
+      path: '/kpi-config',
       icon: 'Target',
     },
     {
       id: 'pool',
       label: 'Manajemen Pool',
-      path: '/admin/pool',
+      path: '/pool',
       icon: 'Wallet',
     },
     {
       id: 'realization',
       label: 'Input Realisasi',
-      path: '/manager/realization',
+      path: '/realization',
       icon: 'FileText',
     },
     {
       id: 'reports',
       label: 'Laporan',
-      path: role === 'superadmin' ? '/admin/reports' : role === 'unit_manager' ? '/manager/reports' : '/employee/reports',
+      path: '/reports',
       icon: 'BarChart3',
+    },
+    {
+      id: 'audit',
+      label: 'Audit Trail',
+      path: '/audit',
+      icon: 'Shield',
+    },
+    {
+      id: 'settings',
+      label: 'Pengaturan',
+      path: '/settings',
+      icon: 'Settings',
     },
     {
       id: 'notifications',
       label: 'Notifikasi',
       path: '/notifications',
       icon: 'Bell',
-    },
-    {
-      id: 'settings',
-      label: 'Pengaturan',
-      path: '/admin/settings',
-      icon: 'Settings',
-    },
-    {
-      id: 'audit',
-      label: 'Audit Trail',
-      path: '/admin/audit',
-      icon: 'Shield',
     },
     {
       id: 'profile',

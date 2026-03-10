@@ -9,18 +9,9 @@ import { Label } from '@/components/ui/label'
 import { authService } from '@/lib/services/auth.service'
 import { Loader2 } from 'lucide-react'
 
-function getDashboardRoute(role: string): string {
-  switch (role) {
-    case 'superadmin':
-    case 'admin':
-      return '/admin/dashboard'
-    case 'unit_manager':
-      return '/manager/dashboard'
-    case 'employee':
-      return '/employee/dashboard'
-    default:
-      return '/forbidden'
-  }
+// All authenticated users go to unified dashboard
+function getDashboardRoute(): string {
+  return '/dashboard'
 }
 
 function getErrorMessage(errorCode: string | null): string | null {
@@ -62,13 +53,11 @@ export default function LoginPage() {
       const result = await authService.login({ email, password })
 
       if (result.success && result.user) {
-        const dashboardRoute = getDashboardRoute(result.user.role)
-        
-        // Wait longer for session to be fully established
+        // Wait for session to be fully established
         await new Promise(resolve => setTimeout(resolve, 1000))
         
-        // Use hard navigation for reliable redirect
-        window.location.href = dashboardRoute
+        // Use hard navigation for reliable redirect to unified dashboard
+        window.location.href = getDashboardRoute()
       } else {
         setError(result.error || 'Email atau kata sandi salah')
         setIsLoading(false)

@@ -70,9 +70,14 @@ Insentif Individual = Dana Unit × (Skor Karyawan / Total Skor Unit)
 ### Performance Optimizations
 - Server Components by default
 - Optimized bundle size untuk Vercel free tier
-- Data caching dengan TTL
+- Route prefetching dengan OptimizedLink component
+- Middleware caching (15 menit TTL, 1000 entries max)
+- Static asset caching (1 tahun)
 - Lazy loading untuk komponen berat
 - Optimized imports (lucide-react, Supabase)
+- SWC minification enabled
+- Console logs removed in production
+- Compression enabled
 
 ## 🔐 Authentication Flow
 
@@ -105,7 +110,7 @@ The system uses Supabase Auth native features for simple, reliable authenticatio
 
 Lihat [INSTALL.md](./INSTALL.md) untuk panduan instalasi lengkap.
 
-### Ringkasan Cepat
+### Development Mode
 
 ```bash
 # 1. Install dependencies
@@ -125,7 +130,36 @@ npm run setup:auth
 npm run dev
 ```
 
-Buka http://localhost:3000 dan login dengan kredensial superadmin.
+Buka http://localhost:3002 dan login dengan kredensial superadmin.
+
+### Production Mode
+
+Untuk testing performa atau deployment lokal:
+
+```bash
+# Build production
+npm run build
+
+# Start production server
+npm run start
+
+# Atau gunakan script otomatis (Windows)
+.\START_PRODUCTION.ps1
+```
+
+Production build mengaktifkan:
+- ✅ SWC minification (default di Next.js 15)
+- ✅ Console log removal
+- ✅ Optimized bundles
+- ✅ Route prefetching
+- ✅ Middleware caching (15 menit TTL)
+- ✅ Static asset caching (1 tahun)
+
+**Expected Performance:**
+- Navigation: < 200ms (dengan prefetch)
+- Middleware: < 50ms (dengan cache)
+- No "rebuilding" messages
+- Instant page transitions
 
 ## 📚 Dokumentasi
 
@@ -259,6 +293,36 @@ const result = await runFullCalculation('2024-03')
 
 ## 🔧 Development
 
+### Development vs Production Mode
+
+**Development Mode** (`npm run dev`):
+- Hot Module Replacement (HMR) enabled
+- Detailed error messages
+- Source maps enabled
+- Console logs visible
+- Slower performance (rebuilding on changes)
+- Port: 3002
+
+**Production Mode** (`npm run build && npm run start`):
+- Pre-compiled pages
+- Optimized bundles
+- Console logs removed
+- Source maps disabled
+- Fast performance (no rebuilding)
+- Route prefetching enabled
+- Middleware caching optimized
+- Port: 3002
+
+### Testing Performance
+
+```bash
+# Test navigation timing and prefetch
+npx tsx scripts/test-performance-optimization.ts
+
+# Test middleware cache performance
+npx tsx scripts/test-middleware-cache.ts
+```
+
 ### Build untuk Production
 ```bash
 npm run build
@@ -268,6 +332,53 @@ npm run build
 ```bash
 vercel deploy
 ```
+
+Vercel automatically runs production build with all optimizations enabled.
+
+## 🐛 Troubleshooting
+
+### Performance Issues
+
+**Problem**: Navigasi lambat, ada "rebuilding" messages
+**Solution**: 
+- Pastikan menggunakan production build: `npm run build && npm run start`
+- Development mode (`npm run dev`) memang lebih lambat karena HMR
+
+**Problem**: Middleware lambat (> 100ms)
+**Solution**:
+- Cache sudah dioptimasi dengan TTL 15 menit
+- Pastikan database connection stabil
+- Check Supabase dashboard untuk slow queries
+
+**Problem**: Static assets tidak ter-cache
+**Solution**:
+- Vercel otomatis handle caching
+- Local testing: pastikan production build running
+- Check response headers untuk `Cache-Control`
+
+### Build Issues
+
+**Problem**: Build gagal dengan TypeScript errors
+**Solution**:
+```bash
+npm run lint
+# Fix semua errors yang muncul
+npm run build
+```
+
+**Problem**: Out of memory saat build
+**Solution**:
+```bash
+# Increase Node memory limit
+NODE_OPTIONS="--max-old-space-size=4096" npm run build
+```
+
+### Common Issues
+
+Lihat file-file berikut untuk troubleshooting spesifik:
+- `PERBAIKAN_LOGIN.md` - Login issues
+- `PERBAIKAN_SIDEBAR_STRUKTUR.md` - Sidebar navigation
+- `CARA_ATASI_CHUNK_ERROR.md` - Chunk loading errors
 
 ## 📄 License
 

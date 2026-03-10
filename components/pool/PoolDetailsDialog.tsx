@@ -11,8 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Plus, Trash2, Edit2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/format'
 
 interface Pool {
@@ -20,9 +19,9 @@ interface Pool {
   period: string
   revenue_total: number
   deduction_total: number
-  net_pool: number
+  net_pool: number | null
   global_allocation_percentage: number
-  allocated_amount: number
+  allocated_amount: number | null
   status: 'draft' | 'approved' | 'distributed'
 }
 
@@ -59,11 +58,9 @@ export default function PoolDetailsDialog({
   
   // Revenue form
   const [revenueForm, setRevenueForm] = useState({ description: '', amount: '' })
-  const [editingRevenue, setEditingRevenue] = useState<string | null>(null)
   
   // Deduction form
   const [deductionForm, setDeductionForm] = useState({ description: '', amount: '' })
-  const [editingDeduction, setEditingDeduction] = useState<string | null>(null)
 
   useEffect(() => {
     if (pool && open) {
@@ -106,7 +103,7 @@ export default function PoolDetailsDialog({
   async function handleAddRevenue() {
     if (!pool || !revenueForm.description || !revenueForm.amount) return
     if (pool.status !== 'draft') {
-      alert('Cannot modify approved pool')
+      alert('Tidak dapat mengubah pool yang sudah disetujui')
       return
     }
 
@@ -128,17 +125,17 @@ export default function PoolDetailsDialog({
       onUpdate()
     } catch (error: any) {
       console.error('Error adding revenue:', error)
-      alert(error.message || 'Failed to add revenue')
+      alert(error.message || 'Gagal menambahkan pendapatan')
     }
   }
 
   async function handleDeleteRevenue(id: string) {
     if (!pool || pool.status !== 'draft') {
-      alert('Cannot modify approved pool')
+      alert('Tidak dapat mengubah pool yang sudah disetujui')
       return
     }
 
-    if (!confirm('Delete this revenue item?')) return
+    if (!confirm('Hapus item pendapatan ini?')) return
 
     try {
       const supabase = createClient()
@@ -154,14 +151,14 @@ export default function PoolDetailsDialog({
       onUpdate()
     } catch (error: any) {
       console.error('Error deleting revenue:', error)
-      alert(error.message || 'Failed to delete revenue')
+      alert(error.message || 'Gagal menghapus pendapatan')
     }
   }
 
   async function handleAddDeduction() {
     if (!pool || !deductionForm.description || !deductionForm.amount) return
     if (pool.status !== 'draft') {
-      alert('Cannot modify approved pool')
+      alert('Tidak dapat mengubah pool yang sudah disetujui')
       return
     }
 
@@ -183,17 +180,17 @@ export default function PoolDetailsDialog({
       onUpdate()
     } catch (error: any) {
       console.error('Error adding deduction:', error)
-      alert(error.message || 'Failed to add deduction')
+      alert(error.message || 'Gagal menambahkan potongan')
     }
   }
 
   async function handleDeleteDeduction(id: string) {
     if (!pool || pool.status !== 'draft') {
-      alert('Cannot modify approved pool')
+      alert('Tidak dapat mengubah pool yang sudah disetujui')
       return
     }
 
-    if (!confirm('Delete this deduction item?')) return
+    if (!confirm('Hapus item potongan ini?')) return
 
     try {
       const supabase = createClient()
@@ -209,7 +206,7 @@ export default function PoolDetailsDialog({
       onUpdate()
     } catch (error: any) {
       console.error('Error deleting deduction:', error)
-      alert(error.message || 'Failed to delete deduction')
+      alert(error.message || 'Gagal menghapus potongan')
     }
   }
 
@@ -257,10 +254,10 @@ export default function PoolDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Pool Details - {pool.period}</DialogTitle>
+          <DialogTitle>Detail Pool - {pool.period}</DialogTitle>
           <DialogDescription>
             Status: <span className="font-semibold">{pool.status.toUpperCase()}</span>
-            {!isDraft && ' (Read-only)'}
+            {!isDraft && ' (Hanya Baca)'}
           </DialogDescription>
         </DialogHeader>
 
@@ -268,53 +265,53 @@ export default function PoolDetailsDialog({
           {/* Summary */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
             <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
+              <p className="text-sm text-gray-600">Total Pendapatan</p>
               <p className="text-lg font-semibold">{formatCurrency(pool.revenue_total)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Deductions</p>
+              <p className="text-sm text-gray-600">Total Potongan</p>
               <p className="text-lg font-semibold">{formatCurrency(pool.deduction_total)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Net Pool</p>
-              <p className="text-xl font-bold text-blue-600">{formatCurrency(pool.net_pool)}</p>
+              <p className="text-sm text-gray-600">Pool Bersih</p>
+              <p className="text-xl font-bold text-blue-600">{formatCurrency(pool.net_pool || 0)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Allocated Amount ({pool.global_allocation_percentage}%)</p>
-              <p className="text-xl font-bold text-green-600">{formatCurrency(pool.allocated_amount)}</p>
+              <p className="text-sm text-gray-600">Jumlah Dialokasikan ({pool.global_allocation_percentage}%)</p>
+              <p className="text-xl font-bold text-green-600">{formatCurrency(pool.allocated_amount || 0)}</p>
             </div>
           </div>
 
           {/* Revenue Items */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">Revenue Items</h3>
+              <h3 className="text-lg font-semibold">Item Pendapatan</h3>
             </div>
             
             {isDraft && (
               <div className="flex gap-2 mb-3">
                 <Input
-                  placeholder="Description"
+                  placeholder="Deskripsi"
                   value={revenueForm.description}
                   onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })}
                 />
                 <Input
                   type="number"
-                  placeholder="Amount"
+                  placeholder="Jumlah"
                   value={revenueForm.amount}
                   onChange={(e) => setRevenueForm({ ...revenueForm, amount: e.target.value })}
                   className="w-40"
                 />
                 <Button onClick={handleAddRevenue} size="sm">
                   <Plus className="h-4 w-4 mr-1" />
-                  Add
+                  Tambah
                 </Button>
               </div>
             )}
 
             <div className="space-y-2">
               {revenueItems.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No revenue items</p>
+                <p className="text-sm text-gray-500 text-center py-4">Belum ada item pendapatan</p>
               ) : (
                 revenueItems.map(item => (
                   <div key={item.id} className="flex justify-between items-center p-3 bg-white border rounded">
@@ -342,33 +339,33 @@ export default function PoolDetailsDialog({
           {/* Deduction Items */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">Deduction Items</h3>
+              <h3 className="text-lg font-semibold">Item Potongan</h3>
             </div>
             
             {isDraft && (
               <div className="flex gap-2 mb-3">
                 <Input
-                  placeholder="Description"
+                  placeholder="Deskripsi"
                   value={deductionForm.description}
                   onChange={(e) => setDeductionForm({ ...deductionForm, description: e.target.value })}
                 />
                 <Input
                   type="number"
-                  placeholder="Amount"
+                  placeholder="Jumlah"
                   value={deductionForm.amount}
                   onChange={(e) => setDeductionForm({ ...deductionForm, amount: e.target.value })}
                   className="w-40"
                 />
                 <Button onClick={handleAddDeduction} size="sm">
                   <Plus className="h-4 w-4 mr-1" />
-                  Add
+                  Tambah
                 </Button>
               </div>
             )}
 
             <div className="space-y-2">
               {deductionItems.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No deduction items</p>
+                <p className="text-sm text-gray-500 text-center py-4">Belum ada item potongan</p>
               ) : (
                 deductionItems.map(item => (
                   <div key={item.id} className="flex justify-between items-center p-3 bg-white border rounded">

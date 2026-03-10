@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useTransition, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth, useMenuItems } from '@/lib/hooks/useAuth'
 import { authService } from '@/lib/services/auth.service'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard,
   Users,
+  UserCheck,
   Building2,
   Target,
   Wallet,
@@ -29,6 +31,7 @@ import { cn } from '@/lib/utils'
 const iconMap: Record<string, any> = {
   LayoutDashboard,
   Users,
+  UserCheck,
   Building2,
   Target,
   Wallet,
@@ -46,11 +49,29 @@ export default function Sidebar() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [unitName, setUnitName] = useState('')
-  const [isPending, startTransition] = useTransition()
+  const [companyInfo, setCompanyInfo] = useState<any>(null)
   const pathname = usePathname()
   const router = useRouter()
   const { user, loading } = useAuth()
   const menuItems = useMenuItems()
+
+  // Load company info including logo
+  useEffect(() => {
+    const loadCompanyInfo = async () => {
+      try {
+        const response = await fetch('/api/settings', {
+          headers: { 'Cache-Control': 'max-age=300' }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setCompanyInfo(data?.companyInfo || null)
+        }
+      } catch (error) {
+        console.error('Failed to load company info:', error)
+      }
+    }
+    loadCompanyInfo()
+  }, [])
 
   useEffect(() => {
     const loadUnitName = async () => {
@@ -117,14 +138,7 @@ export default function Sidebar() {
 
   const handleNavigation = useCallback((path: string) => {
     setIsMobileOpen(false)
-    startTransition(() => {
-      router.push(path)
-    })
-  }, [router])
-
-  const handleMouseEnter = useCallback((path: string) => {
-    router.prefetch(path)
-  }, [router])
+  }, [])
 
   const getRoleBadge = () => {
     if (!user) return null
@@ -174,18 +188,36 @@ export default function Sidebar() {
           )}>
             {!isCollapsed && (
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-blue-600 font-bold text-lg">J</span>
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md overflow-hidden">
+                  {companyInfo?.logo ? (
+                    <img 
+                      src={companyInfo.logo} 
+                      alt="Logo" 
+                      className="w-full h-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-blue-600 font-bold text-lg">J</span>
+                  )}
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">JASPEL</h1>
+                  <h1 className="text-xl font-bold text-white">
+                    {companyInfo?.appName || 'JASPEL'}
+                  </h1>
                   <p className="text-xs text-blue-100">Sistem Insentif KPI</p>
                 </div>
               </div>
             )}
             {isCollapsed && (
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md mx-auto">
-                <span className="text-blue-600 font-bold text-lg">J</span>
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md mx-auto overflow-hidden">
+                {companyInfo?.logo ? (
+                  <img 
+                    src={companyInfo.logo} 
+                    alt="Logo" 
+                    className="w-full h-full object-contain p-1"
+                  />
+                ) : (
+                  <span className="text-blue-600 font-bold text-lg">J</span>
+                )}
               </div>
             )}
             <button
@@ -233,19 +265,16 @@ export default function Sidebar() {
 
               return (
                 <div key={item.id} className="relative group">
-                  <button
-                    onClick={() => handleNavigation(item.path)}
-                    onMouseEnter={() => handleMouseEnter(item.path)}
+                  <Link
+                    href={item.path}
                     className={cn(
                       'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-200',
                       'hover:bg-white hover:shadow-sm',
                       active && 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md hover:shadow-lg',
                       !active && 'text-slate-700 hover:text-blue-600',
-                      isCollapsed && 'justify-center px-2',
-                      isPending && 'opacity-50 cursor-wait'
+                      isCollapsed && 'justify-center px-2'
                     )}
                     aria-label={item.label}
-                    disabled={isPending}
                   >
                     <div className="relative flex-shrink-0">
                       <Icon className={cn(
@@ -266,7 +295,7 @@ export default function Sidebar() {
                         {unreadCount}
                       </span>
                     )}
-                  </button>
+                  </Link>
                   {isCollapsed && (
                     <div className="absolute left-full ml-3 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
                       {item.label}
@@ -347,18 +376,16 @@ export default function Sidebar() {
                   const isNotifications = item.id === 'notifications'
 
                   return (
-                    <button
+                    <Link
                       key={item.id}
+                      href={item.path}
                       onClick={() => handleNavigation(item.path)}
-                      onMouseEnter={() => handleMouseEnter(item.path)}
                       className={cn(
                         'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-200',
                         'hover:bg-white hover:shadow-sm',
                         active && 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md',
-                        !active && 'text-slate-700 hover:text-blue-600',
-                        isPending && 'opacity-50 cursor-wait'
+                        !active && 'text-slate-700 hover:text-blue-600'
                       )}
-                      disabled={isPending}
                     >
                       <div className="relative flex-shrink-0">
                         <Icon className={cn(
@@ -377,7 +404,7 @@ export default function Sidebar() {
                           {unreadCount}
                         </span>
                       )}
-                    </button>
+                    </Link>
                   )
                 })}
               </nav>

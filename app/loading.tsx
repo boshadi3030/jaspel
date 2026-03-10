@@ -1,5 +1,9 @@
-import { PageLoader } from '@/components/ui/loading-spinner'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export default function Loading() {
-  return <PageLoader />
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <LoadingSpinner size="lg" />
+    </div>
+  )
 }

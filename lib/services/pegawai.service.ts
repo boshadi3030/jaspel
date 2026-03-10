@@ -14,12 +14,17 @@ export async function getPegawai(
     
     let query = supabase
       .from('m_employees')
-      .select('id, employee_code, full_name, unit_id, tax_status, is_active, created_at, updated_at, m_units(name)', { count: 'exact' })
+      .select(`
+        id, employee_code, full_name, unit_id, position, phone, address, 
+        nik, bank_name, bank_account_number, bank_account_name,
+        tax_status, is_active, created_at, updated_at, 
+        m_units(name)
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
     
     // Apply search filter
     if (searchTerm) {
-      query = query.or(`full_name.ilike.%${searchTerm}%,employee_code.ilike.%${searchTerm}%`)
+      query = query.or(`full_name.ilike.%${searchTerm}%,employee_code.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%`)
     }
     
     // Apply pagination
@@ -35,14 +40,7 @@ export async function getPegawai(
     
     // Transform data to match Pegawai type
     const transformedData: Pegawai[] = (data || []).map((item: any) => ({
-      id: item.id,
-      employee_code: item.employee_code,
-      full_name: item.full_name,
-      unit_id: item.unit_id,
-      tax_status: item.tax_status,
-      is_active: item.is_active,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
+      ...item,
       m_units: Array.isArray(item.m_units) && item.m_units.length > 0 
         ? item.m_units[0] 
         : undefined
@@ -65,7 +63,12 @@ export async function getPegawaiById(
     
     const { data, error } = await supabase
       .from('m_employees')
-      .select('id, employee_code, full_name, unit_id, tax_status, is_active, created_at, updated_at, m_units(name)')
+      .select(`
+        id, employee_code, full_name, unit_id, position, phone, address,
+        nik, bank_name, bank_account_number, bank_account_name,
+        tax_status, is_active, created_at, updated_at,
+        m_units(name)
+      `)
       .eq('id', id)
       .single()
     
@@ -75,14 +78,7 @@ export async function getPegawaiById(
     
     // Transform data to match Pegawai type
     const transformedData: Pegawai = {
-      id: data.id,
-      employee_code: data.employee_code,
-      full_name: data.full_name,
-      unit_id: data.unit_id,
-      tax_status: data.tax_status,
-      is_active: data.is_active,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
+      ...data,
       m_units: Array.isArray(data.m_units) && data.m_units.length > 0 
         ? data.m_units[0] 
         : undefined
@@ -114,6 +110,19 @@ export async function createPegawai(
       return { success: false, error: 'Kode pegawai sudah digunakan' }
     }
     
+    // Check if NIK already exists (if provided)
+    if (input.nik) {
+      const { data: existingNik } = await supabase
+        .from('m_employees')
+        .select('id')
+        .eq('nik', input.nik)
+        .single()
+      
+      if (existingNik) {
+        return { success: false, error: 'NIK sudah terdaftar' }
+      }
+    }
+    
     // Create pegawai record
     const { data, error } = await supabase
       .from('m_employees')
@@ -121,6 +130,13 @@ export async function createPegawai(
         employee_code: input.employee_code,
         full_name: input.full_name,
         unit_id: input.unit_id,
+        position: input.position || null,
+        phone: input.phone || null,
+        address: input.address || null,
+        nik: input.nik || null,
+        bank_name: input.bank_name || null,
+        bank_account_number: input.bank_account_number || null,
+        bank_account_name: input.bank_account_name || null,
         tax_status: input.tax_status || 'TK/0',
         is_active: true,
       })
@@ -161,10 +177,27 @@ export async function updatePegawai(
       }
     }
     
+    // Check if NIK already exists (if being updated)
+    if (updates.nik) {
+      const { data: existingNik } = await supabase
+        .from('m_employees')
+        .select('id')
+        .eq('nik', updates.nik)
+        .neq('id', id)
+        .single()
+      
+      if (existingNik) {
+        return { success: false, error: 'NIK sudah terdaftar' }
+      }
+    }
+    
     // Update pegawai record
     const { error } = await supabase
       .from('m_employees')
-      .update(updates)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
     
     if (error) {
@@ -189,7 +222,10 @@ export async function deactivatePegawai(
     // Update pegawai record
     const { error } = await supabase
       .from('m_employees')
-      .update({ is_active: false })
+      .update({ 
+        is_active: false,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
     
     if (error) {
@@ -222,7 +258,12 @@ export async function getPegawaiByUnit(
     
     const { data, error } = await supabase
       .from('m_employees')
-      .select('id, employee_code, full_name, unit_id, tax_status, is_active, created_at, updated_at, m_units(name)')
+      .select(`
+        id, employee_code, full_name, unit_id, position, phone, address,
+        nik, bank_name, bank_account_number, bank_account_name,
+        tax_status, is_active, created_at, updated_at,
+        m_units(name)
+      `)
       .eq('unit_id', unitId)
       .eq('is_active', true)
       .order('full_name', { ascending: true })
@@ -233,14 +274,7 @@ export async function getPegawaiByUnit(
     
     // Transform data to match Pegawai type
     const transformedData: Pegawai[] = (data || []).map((item: any) => ({
-      id: item.id,
-      employee_code: item.employee_code,
-      full_name: item.full_name,
-      unit_id: item.unit_id,
-      tax_status: item.tax_status,
-      is_active: item.is_active,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
+      ...item,
       m_units: Array.isArray(item.m_units) && item.m_units.length > 0 
         ? item.m_units[0] 
         : undefined

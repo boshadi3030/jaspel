@@ -15,7 +15,7 @@ export function Footer() {
         })
         if (response.ok) {
           const data = await response.json()
-          // Check footer field at root level, or use companyInfo.footer as fallback
+          // Priority: footer.text > companyInfo.footer > default
           if (data?.footer?.text) {
             setFooterText(data.footer.text)
           } else if (data?.companyInfo?.footer) {

@@ -9,9 +9,9 @@ interface Pool {
   period: string
   revenue_total: number
   deduction_total: number
-  net_pool: number
+  net_pool: number | null
   global_allocation_percentage: number
-  allocated_amount: number
+  allocated_amount: number | null
   status: 'draft' | 'approved' | 'distributed'
   approved_by: string | null
   approved_at: string | null
@@ -76,9 +76,9 @@ export default function PoolTable({ pools, onView, onApprove }: PoolTableProps) 
               <td className="p-3">{getStatusBadge(pool.status)}</td>
               <td className="p-3 text-right">{formatCurrency(pool.revenue_total)}</td>
               <td className="p-3 text-right">{formatCurrency(pool.deduction_total)}</td>
-              <td className="p-3 text-right font-semibold">{formatCurrency(pool.net_pool)}</td>
+              <td className="p-3 text-right font-semibold">{formatCurrency(pool.net_pool || 0)}</td>
               <td className="p-3 text-right font-semibold text-blue-600">
-                {formatCurrency(pool.allocated_amount)}
+                {formatCurrency(pool.allocated_amount || 0)}
               </td>
               <td className="p-3">
                 <div className="flex gap-2 justify-center">

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { formatCurrency, formatPercentage } from '@/lib/formulas/kpi-calculator'
+import { getCompanyInfo } from '@/lib/services/settings.service'
 
 interface IncentiveSlipData {
   period: string
@@ -31,21 +32,41 @@ interface IncentiveSlipData {
 /**
  * Generate incentive slip PDF
  */
-export function generateIncentiveSlipPDF(data: IncentiveSlipData) {
+export async function generateIncentiveSlipPDF(data: IncentiveSlipData) {
   const doc = new jsPDF()
+  
+  // Get company info
+  const companyInfo = await getCompanyInfo()
+  
+  let yPos = 15
+  
+  // Add logo if available
+  if (companyInfo.logo) {
+    try {
+      doc.addImage(companyInfo.logo, 'PNG', 14, yPos, 30, 30)
+    } catch (e) {
+      console.log('Could not add logo to PDF:', e)
+    }
+  }
   
   // Header
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
-  doc.text('SLIP INSENTIF KARYAWAN', 105, 20, { align: 'center' })
+  doc.text('SLIP INSENTIF KARYAWAN', 105, yPos + 5, { align: 'center' })
+  
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text(companyInfo.name, 105, yPos + 12, { align: 'center' })
+  doc.text(companyInfo.address, 105, yPos + 17, { align: 'center' })
   
   doc.setFontSize(12)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Periode: ${data.period}`, 105, 28, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.text(`Periode: ${data.period}`, 105, yPos + 25, { align: 'center' })
+  
+  yPos = 45
   
   // Employee Info
   doc.setFontSize(10)
-  let yPos = 40
   
   doc.setFont('helvetica', 'bold')
   doc.text('Informasi Karyawan', 14, yPos)
@@ -155,7 +176,7 @@ export function generateIncentiveSlipPDF(data: IncentiveSlipData) {
   const pageHeight = doc.internal.pageSize.height
   doc.setFontSize(8)
   doc.setFont('helvetica', 'italic')
-  doc.text('Dokumen ini dibuat secara otomatis oleh sistem JASPEL', 105, pageHeight - 15, { align: 'center' })
+  doc.text(companyInfo.name, 105, pageHeight - 15, { align: 'center' })
   doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, pageHeight - 10, { align: 'center' })
   
   // Save PDF
@@ -165,7 +186,7 @@ export function generateIncentiveSlipPDF(data: IncentiveSlipData) {
 /**
  * Generate summary report PDF for all employees
  */
-export function generateSummaryReportPDF(
+export async function generateSummaryReportPDF(
   results: Array<{
     employeeCode: string
     employeeName: string
@@ -179,14 +200,32 @@ export function generateSummaryReportPDF(
 ) {
   const doc = new jsPDF('landscape')
   
+  // Get company info
+  const companyInfo = await getCompanyInfo()
+  
+  let yPos = 15
+  
+  // Add logo if available
+  if (companyInfo.logo) {
+    try {
+      doc.addImage(companyInfo.logo, 'PNG', 14, yPos, 25, 25)
+    } catch (e) {
+      console.log('Could not add logo to PDF:', e)
+    }
+  }
+  
   // Header
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
-  doc.text('LAPORAN REKAPITULASI INSENTIF', 148, 15, { align: 'center' })
+  doc.text('LAPORAN REKAPITULASI INSENTIF', 148, yPos + 5, { align: 'center' })
+  
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text(companyInfo.name, 148, yPos + 12, { align: 'center' })
   
   doc.setFontSize(12)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Periode: ${period}`, 148, 22, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.text(`Periode: ${period}`, 148, yPos + 19, { align: 'center' })
   
   // Summary Table
   const tableData = results.map((r, index) => [
@@ -217,7 +256,7 @@ export function generateSummaryReportPDF(
   ])
   
   autoTable(doc, {
-    startY: 30,
+    startY: 40,
     head: [['No', 'Kode', 'Nama', 'Unit', 'Skor', 'Bruto', 'Pajak', 'Netto']],
     body: tableData,
     theme: 'grid',
@@ -245,7 +284,7 @@ export function generateSummaryReportPDF(
   const pageHeight = doc.internal.pageSize.height
   doc.setFontSize(8)
   doc.setFont('helvetica', 'italic')
-  doc.text('Dokumen ini dibuat secara otomatis oleh sistem JASPEL', 148, pageHeight - 10, { align: 'center' })
+  doc.text(companyInfo.name, 148, pageHeight - 10, { align: 'center' })
   
   // Save PDF
   doc.save(`rekapitulasi-insentif-${period}.pdf`)
@@ -266,36 +305,55 @@ export async function exportToPDF(options: ReportExportOptions): Promise<Buffer>
   const { reportType, period, data } = options
 
   const doc = new jsPDF()
+  
+  // Get company info
+  const companyInfo = await getCompanyInfo()
+  
+  let yPos = 15
 
-  // Header with company logo placeholder
+  // Add logo if available
+  if (companyInfo.logo) {
+    try {
+      doc.addImage(companyInfo.logo, 'PNG', 14, yPos, 30, 30)
+    } catch (e) {
+      console.log('Could not add logo to PDF:', e)
+    }
+  }
+
+  // Header with company info
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
   
   let title = ''
   switch (reportType) {
     case 'incentive':
-      title = 'INCENTIVE REPORT'
+      title = 'LAPORAN INSENTIF'
       break
     case 'kpi-achievement':
-      title = 'KPI ACHIEVEMENT REPORT'
+      title = 'LAPORAN PENCAPAIAN KPI'
       break
     case 'unit-comparison':
-      title = 'UNIT COMPARISON REPORT'
+      title = 'LAPORAN PERBANDINGAN UNIT'
       break
     case 'employee-slip':
-      title = 'EMPLOYEE SLIP REPORT'
+      title = 'SLIP KARYAWAN'
       break
   }
 
-  doc.text(title, 105, 20, { align: 'center' })
-
-  // Generation date
+  doc.text(title, 105, yPos + 5, { align: 'center' })
+  
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
+  doc.text(companyInfo.name, 105, yPos + 12, { align: 'center' })
+  doc.text(companyInfo.address, 105, yPos + 17, { align: 'center' })
+
+  // Generation date
   const now = new Date()
   const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
-  doc.text(`Period: ${period}`, 105, 28, { align: 'center' })
-  doc.text(`Generated: ${dateStr}`, 105, 34, { align: 'center' })
+  doc.text(`Periode: ${period}`, 105, yPos + 24, { align: 'center' })
+  doc.text(`Dicetak: ${dateStr}`, 105, yPos + 29, { align: 'center' })
+  
+  yPos = 50
 
   // Prepare table data based on report type
   let headers: string[] = []
@@ -352,7 +410,7 @@ export async function exportToPDF(options: ReportExportOptions): Promise<Buffer>
 
   // Generate table
   autoTable(doc, {
-    startY: 40,
+    startY: yPos,
     head: [headers],
     body: body,
     theme: 'grid',
@@ -366,6 +424,12 @@ export async function exportToPDF(options: ReportExportOptions): Promise<Buffer>
       cellPadding: 3,
     },
   })
+  
+  // Footer
+  const pageHeight = doc.internal.pageSize.height
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'italic')
+  doc.text(companyInfo.name, 105, pageHeight - 10, { align: 'center' })
 
   // Convert to buffer
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'))

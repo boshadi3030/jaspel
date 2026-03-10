@@ -30,6 +30,13 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
     full_name: '',
     unit_id: '',
     tax_status: 'TK/0',
+    position: '',
+    phone: '',
+    address: '',
+    nik: '',
+    bank_name: '',
+    bank_account_number: '',
+    bank_account_name: '',
   })
   
   // Load units
@@ -60,6 +67,13 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
         full_name: pegawai.full_name,
         unit_id: pegawai.unit_id,
         tax_status: pegawai.tax_status,
+        position: pegawai.position || '',
+        phone: pegawai.phone || '',
+        address: pegawai.address || '',
+        nik: pegawai.nik || '',
+        bank_name: pegawai.bank_name || '',
+        bank_account_number: pegawai.bank_account_number || '',
+        bank_account_name: pegawai.bank_account_name || '',
       })
     } else {
       setFormData({
@@ -67,6 +81,13 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
         full_name: '',
         unit_id: '',
         tax_status: 'TK/0',
+        position: '',
+        phone: '',
+        address: '',
+        nik: '',
+        bank_name: '',
+        bank_account_number: '',
+        bank_account_name: '',
       })
     }
   }, [pegawai, open])
@@ -177,6 +198,90 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
                 <option value="K/3">K/3</option>
               </select>
             </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="position">Jabatan</Label>
+              <Input
+                id="position"
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                placeholder="Jabatan pegawai"
+                disabled={loading}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="nik">NIK</Label>
+              <Input
+                id="nik"
+                value={formData.nik}
+                onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
+                placeholder="Nomor Induk Kependudukan"
+                disabled={loading}
+                maxLength={16}
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="phone">Telepon</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="Nomor telepon"
+                disabled={loading}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="address">Alamat</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Alamat lengkap"
+                disabled={loading}
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="bank_name">Nama Bank</Label>
+              <Input
+                id="bank_name"
+                value={formData.bank_name}
+                onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+                placeholder="Contoh: BCA, Mandiri"
+                disabled={loading}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="bank_account_number">Nomor Rekening</Label>
+              <Input
+                id="bank_account_number"
+                value={formData.bank_account_number}
+                onChange={(e) => setFormData({ ...formData, bank_account_number: e.target.value })}
+                placeholder="Nomor rekening bank"
+                disabled={loading}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="bank_account_name">Nama Pemegang Rekening</Label>
+            <Input
+              id="bank_account_name"
+              value={formData.bank_account_name}
+              onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
+              placeholder="Nama sesuai rekening bank"
+              disabled={loading}
+            />
           </div>
           
           <DialogFooter>

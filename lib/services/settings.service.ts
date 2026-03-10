@@ -184,8 +184,9 @@ export async function getCompanyInfo(): Promise<any> {
   return data || { 
     appName: 'JASPEL',
     name: 'JASPEL Enterprise', 
-    address: 'Jakarta, Indonesia', 
-    logo: '',
-    footer: '© 2026 JASPEL Enterprise - All Rights Reserved'
+    address: 'Jakarta, Indonesia',
+    phone: '',
+    email: '',
+    logo: ''
   }
 }

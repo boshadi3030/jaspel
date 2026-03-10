@@ -48,6 +48,10 @@ export interface Database {
           tax_status: string
           phone: string | null
           address: string | null
+          nik: string | null
+          bank_name: string | null
+          bank_account_number: string | null
+          bank_account_holder: string | null
           is_active: boolean
           created_at: string
           updated_at: string
@@ -61,6 +65,10 @@ export interface Database {
           tax_status?: string
           phone?: string | null
           address?: string | null
+          nik?: string | null
+          bank_name?: string | null
+          bank_account_number?: string | null
+          bank_account_holder?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -74,6 +82,10 @@ export interface Database {
           tax_status?: string
           phone?: string | null
           address?: string | null
+          nik?: string | null
+          bank_name?: string | null
+          bank_account_number?: string | null
+          bank_account_holder?: string | null
           is_active?: boolean
           created_at?: string
           updated_at?: string
@@ -115,6 +127,13 @@ export interface Database {
           employee_code: string
           full_name: string
           unit_id: string
+          position: string | null
+          phone: string | null
+          address: string | null
+          nik: string | null
+          bank_name: string | null
+          bank_account_number: string | null
+          bank_account_name: string | null
           // Deprecated fields (will be removed after migration):
           role?: 'superadmin' | 'unit_manager' | 'employee'
           email?: string
@@ -129,6 +148,13 @@ export interface Database {
           employee_code: string
           full_name: string
           unit_id: string
+          position?: string | null
+          phone?: string | null
+          address?: string | null
+          nik?: string | null
+          bank_name?: string | null
+          bank_account_number?: string | null
+          bank_account_name?: string | null
           // Deprecated fields (will be removed after migration):
           role?: 'superadmin' | 'unit_manager' | 'employee'
           email?: string
@@ -143,6 +169,13 @@ export interface Database {
           employee_code?: string
           full_name?: string
           unit_id?: string
+          position?: string | null
+          phone?: string | null
+          address?: string | null
+          nik?: string | null
+          bank_name?: string | null
+          bank_account_number?: string | null
+          bank_account_name?: string | null
           // Deprecated fields (will be removed after migration):
           role?: 'superadmin' | 'unit_manager' | 'employee'
           email?: string
@@ -523,6 +556,11 @@ export interface Pegawai {
   position?: string | null
   tax_status: string
   phone?: string | null
+  address?: string | null
+  nik?: string | null
+  bank_name?: string | null
+  bank_account_number?: string | null
+  bank_account_name?: string | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -539,6 +577,11 @@ export interface CreatePegawaiData {
   position?: string | null
   tax_status?: string
   phone?: string | null
+  address?: string | null
+  nik?: string | null
+  bank_name?: string | null
+  bank_account_number?: string | null
+  bank_account_name?: string | null
 }
 
 export interface UpdatePegawaiData {
@@ -548,6 +591,11 @@ export interface UpdatePegawaiData {
   position?: string | null
   tax_status?: string
   phone?: string | null
+  address?: string | null
+  nik?: string | null
+  bank_name?: string | null
+  bank_account_number?: string | null
+  bank_account_name?: string | null
   is_active?: boolean
 }
 
