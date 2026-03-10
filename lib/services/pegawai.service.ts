@@ -17,7 +17,8 @@ export async function getPegawai(
       .select(`
         id, employee_code, full_name, unit_id, position, phone, 
         nik, bank_name, bank_account_number, bank_account_name,
-        tax_status, is_active, created_at, updated_at, 
+        tax_status, employee_status, tax_type, pns_grade,
+        is_active, created_at, updated_at, 
         m_units(name)
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -66,7 +67,8 @@ export async function getPegawaiById(
       .select(`
         id, employee_code, full_name, unit_id, position, phone, address,
         nik, bank_name, bank_account_number, bank_account_name,
-        tax_status, is_active, created_at, updated_at,
+        tax_status, employee_status, tax_type, pns_grade,
+        is_active, created_at, updated_at,
         m_units(name)
       `)
       .eq('id', id)
@@ -138,6 +140,9 @@ export async function createPegawai(
         bank_account_number: input.bank_account_number || null,
         bank_account_name: input.bank_account_name || null,
         tax_status: input.tax_status || 'TK/0',
+        employee_status: (input as any).employee_status || 'ASN',
+        tax_type: (input as any).tax_type || 'TER',
+        pns_grade: (input as any).pns_grade || 3,
         is_active: true,
       })
       .select()
@@ -277,7 +282,8 @@ export async function getPegawaiByUnit(
       .select(`
         id, employee_code, full_name, unit_id, position, phone, address,
         nik, bank_name, bank_account_number, bank_account_name,
-        tax_status, is_active, created_at, updated_at,
+        tax_status, employee_status, tax_type, pns_grade,
+        is_active, created_at, updated_at,
         m_units(name)
       `)
       .eq('unit_id', unitId)

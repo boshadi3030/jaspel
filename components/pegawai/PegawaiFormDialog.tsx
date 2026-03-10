@@ -30,6 +30,9 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
     full_name: '',
     unit_id: '',
     tax_status: 'TK/0',
+    employee_status: 'ASN',
+    tax_type: 'TER',
+    pns_grade: 3,
     position: '',
     phone: '',
     nik: '',
@@ -66,6 +69,9 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
         full_name: pegawai.full_name,
         unit_id: pegawai.unit_id,
         tax_status: pegawai.tax_status,
+        employee_status: (pegawai as any).employee_status || 'ASN',
+        tax_type: (pegawai as any).tax_type || 'TER',
+        pns_grade: (pegawai as any).pns_grade || 3,
         position: pegawai.position || '',
         phone: pegawai.phone || '',
         nik: pegawai.nik || '',
@@ -79,6 +85,9 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
         full_name: '',
         unit_id: '',
         tax_status: 'TK/0',
+        employee_status: 'ASN',
+        tax_type: 'TER',
+        pns_grade: 3,
         position: '',
         phone: '',
         nik: '',
@@ -177,7 +186,23 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
             </div>
             
             <div>
-              <Label htmlFor="tax_status">Status Pajak</Label>
+              <Label htmlFor="employee_status">Status Pegawai</Label>
+              <select
+                id="employee_status"
+                value={formData.employee_status}
+                onChange={(e) => setFormData({ ...formData, employee_status: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md"
+                disabled={loading}
+              >
+                <option value="ASN">ASN</option>
+                <option value="BLUD">BLUD</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="tax_status">Status Pajak (PTKP)</Label>
               <select
                 id="tax_status"
                 value={formData.tax_status}
@@ -193,6 +218,38 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
                 <option value="K/1">K/1</option>
                 <option value="K/2">K/2</option>
                 <option value="K/3">K/3</option>
+              </select>
+            </div>
+            
+            <div>
+              <Label htmlFor="tax_type">Jenis Pajak</Label>
+              <select
+                id="tax_type"
+                value={formData.tax_type}
+                onChange={(e) => setFormData({ ...formData, tax_type: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md"
+                disabled={loading}
+              >
+                <option value="Final">Final</option>
+                <option value="TER">TER</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="pns_grade">Golongan PNS</Label>
+              <select
+                id="pns_grade"
+                value={formData.pns_grade}
+                onChange={(e) => setFormData({ ...formData, pns_grade: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border rounded-md"
+                disabled={loading}
+              >
+                <option value="1">Golongan 1</option>
+                <option value="2">Golongan 2</option>
+                <option value="3">Golongan 3</option>
+                <option value="4">Golongan 4</option>
               </select>
             </div>
           </div>

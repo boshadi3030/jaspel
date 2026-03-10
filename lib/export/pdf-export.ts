@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { formatCurrency, formatPercentage } from '@/lib/formulas/kpi-calculator'
-import { getCompanyInfo } from '@/lib/services/settings.service'
+import { getCompanyInfo, getSetting } from '@/lib/services/settings.service'
 
 interface IncentiveSlipData {
   period: string
@@ -176,7 +176,12 @@ export async function generateIncentiveSlipPDF(data: IncentiveSlipData) {
   const pageHeight = doc.internal.pageSize.height
   doc.setFontSize(8)
   doc.setFont('helvetica', 'italic')
-  doc.text(companyInfo.name, 105, pageHeight - 15, { align: 'center' })
+  
+  // Get footer text from settings
+  const { data: footerData } = await getSetting('footer')
+  const footerText = footerData?.text || companyInfo.name
+  
+  doc.text(footerText, 105, pageHeight - 15, { align: 'center' })
   doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, pageHeight - 10, { align: 'center' })
   
   // Save PDF
@@ -284,7 +289,13 @@ export async function generateSummaryReportPDF(
   const pageHeight = doc.internal.pageSize.height
   doc.setFontSize(8)
   doc.setFont('helvetica', 'italic')
-  doc.text(companyInfo.name, 148, pageHeight - 10, { align: 'center' })
+  
+  // Get footer text from settings
+  const { data: footerData } = await getSetting('footer')
+  const footerText = footerData?.text || companyInfo.name
+  
+  doc.text(footerText, 148, pageHeight - 15, { align: 'center' })
+  doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 148, pageHeight - 10, { align: 'center' })
   
   // Save PDF
   doc.save(`rekapitulasi-insentif-${period}.pdf`)
@@ -429,7 +440,13 @@ export async function exportToPDF(options: ReportExportOptions): Promise<Buffer>
   const pageHeight = doc.internal.pageSize.height
   doc.setFontSize(8)
   doc.setFont('helvetica', 'italic')
-  doc.text(companyInfo.name, 105, pageHeight - 10, { align: 'center' })
+  
+  // Get footer text from settings
+  const { data: footerData } = await getSetting('footer')
+  const footerText = footerData?.text || companyInfo.name
+  
+  doc.text(footerText, 105, pageHeight - 15, { align: 'center' })
+  doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, pageHeight - 10, { align: 'center' })
 
   // Convert to buffer
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'))

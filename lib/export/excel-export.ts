@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx'
+import { getSetting } from '@/lib/services/settings.service'
 
 interface ExportData {
   headers: string[]
@@ -110,6 +111,17 @@ export async function exportToExcel(options: ReportExportOptions): Promise<Buffe
   const colWidths = wsData[0].map(() => ({ wch: 20 }))
   ws['!cols'] = colWidths
 
+  // Add footer rows
+  const { data: footerData } = await getSetting('footer')
+  const footerText = footerData?.text || 'JASPEL Enterprise'
+  const dateStr = new Date().toLocaleString('id-ID')
+  
+  // Add empty row and footer
+  const footerRow = range.e.r + 2
+  XLSX.utils.sheet_add_aoa(ws, [['']], { origin: footerRow })
+  XLSX.utils.sheet_add_aoa(ws, [[footerText]], { origin: footerRow + 1 })
+  XLSX.utils.sheet_add_aoa(ws, [[`Dicetak: ${dateStr}`]], { origin: footerRow + 2 })
+
   // Add worksheet to workbook
   XLSX.utils.book_append_sheet(wb, ws, sheetName)
 
@@ -121,7 +133,7 @@ export async function exportToExcel(options: ReportExportOptions): Promise<Buffe
 /**
  * Export data to Excel file (client-side)
  */
-export function exportToExcelFile({
+export async function exportToExcelFile({
   headers,
   data,
   sheetName = 'Sheet1',
@@ -140,6 +152,16 @@ export function exportToExcelFile({
   const colWidths = headers.map(() => ({ wch: 15 }))
   ws['!cols'] = colWidths
   
+  // Add footer rows
+  const { data: footerData } = await getSetting('footer')
+  const footerText = footerData?.text || 'JASPEL Enterprise'
+  const dateStr = new Date().toLocaleString('id-ID')
+  
+  const footerRow = data.length + 2
+  XLSX.utils.sheet_add_aoa(ws, [['']], { origin: footerRow })
+  XLSX.utils.sheet_add_aoa(ws, [[footerText]], { origin: footerRow + 1 })
+  XLSX.utils.sheet_add_aoa(ws, [[`Dicetak: ${dateStr}`]], { origin: footerRow + 2 })
+  
   // Add worksheet to workbook
   XLSX.utils.book_append_sheet(wb, ws, sheetName)
   
@@ -150,7 +172,7 @@ export function exportToExcelFile({
 /**
  * Export KPI realization template
  */
-export function exportKPITemplate(
+export async function exportKPITemplate(
   employees: Array<{ code: string; name: string }>,
   indicators: Array<{ code: string; name: string; target: number }>
 ) {
@@ -180,7 +202,7 @@ export function exportKPITemplate(
     })
   })
   
-  exportToExcelFile({
+  await exportToExcelFile({
     headers,
     data,
     sheetName: 'KPI Realization',
@@ -191,7 +213,7 @@ export function exportKPITemplate(
 /**
  * Export calculation results
  */
-export function exportCalculationResults(
+export async function exportCalculationResults(
   results: Array<{
     employeeCode: string
     employeeName: string
@@ -232,7 +254,7 @@ export function exportCalculationResults(
     r.netIncentive.toFixed(2)
   ])
   
-  exportToExcelFile({
+  await exportToExcelFile({
     headers,
     data,
     sheetName: 'Calculation Results',
