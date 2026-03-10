@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,9 +13,9 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const supabase = await createClient()
+    const supabase = await createServerClient()
     
-    // Verify user is authenticated and is superadmin
+    // Verify user is authenticated
     const { data: { user: authUser } } = await supabase.auth.getUser()
     if (!authUser) {
       return NextResponse.json(
@@ -23,10 +24,16 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const userRole = authUser.user_metadata?.role
-    if (userRole !== 'superadmin') {
+    // Check if user is superadmin by querying m_employees table
+    const { data: employeeData } = await supabase
+      .from('m_employees')
+      .select('role')
+      .eq('user_id', authUser.id)
+      .single()
+    
+    if (!employeeData || employeeData.role !== 'superadmin') {
       return NextResponse.json(
-        { success: false, error: 'Tidak memiliki akses' },
+        { success: false, error: 'Hanya superadmin yang dapat menghapus user' },
         { status: 403 }
       )
     }
@@ -39,8 +46,20 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Create admin client with service role key for user deletion
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+    
     // Delete employee record first (will cascade to related data)
-    const { error: employeeError } = await supabase
+    const { error: employeeError } = await supabaseAdmin
       .from('m_employees')
       .delete()
       .eq('user_id', userId)
@@ -52,8 +71,8 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Delete auth user
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId)
+    // Delete auth user using admin client
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId)
     
     if (authError) {
       return NextResponse.json(

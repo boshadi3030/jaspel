@@ -32,7 +32,6 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
     tax_status: 'TK/0',
     position: '',
     phone: '',
-    address: '',
     nik: '',
     bank_name: '',
     bank_account_number: '',
@@ -69,7 +68,6 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
         tax_status: pegawai.tax_status,
         position: pegawai.position || '',
         phone: pegawai.phone || '',
-        address: pegawai.address || '',
         nik: pegawai.nik || '',
         bank_name: pegawai.bank_name || '',
         bank_account_number: pegawai.bank_account_number || '',
@@ -83,7 +81,6 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
         tax_status: 'TK/0',
         position: '',
         phone: '',
-        address: '',
         nik: '',
         bank_name: '',
         bank_account_number: '',
@@ -233,17 +230,6 @@ export function PegawaiFormDialog({ open, onClose, onSuccess, pegawai }: Pegawai
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="Nomor telepon"
-                disabled={loading}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="address">Alamat</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Alamat lengkap"
                 disabled={loading}
               />
             </div>

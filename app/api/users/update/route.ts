@@ -4,7 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { id, email, role, employee_id } = body
+    const { id, email, role, unit_id, employee_id } = body
     
     const supabase = await createClient()
     
@@ -26,12 +26,37 @@ export async function POST(request: Request) {
     // Update auth user metadata
     const updateData: any = {}
     if (email) updateData.email = email
-    if (role) updateData.user_metadata = { role }
+    
+    // Build user_metadata object
+    const userMetadata: any = {}
+    if (role) userMetadata.role = role
+    if (unit_id) userMetadata.unit_id = unit_id
+    
+    if (Object.keys(userMetadata).length > 0) {
+      // Get existing metadata first
+      const { data: existingUser } = await adminClient.auth.admin.getUserById(id)
+      updateData.user_metadata = {
+        ...existingUser?.user?.user_metadata,
+        ...userMetadata
+      }
+    }
     
     const { error: authError } = await adminClient.auth.admin.updateUserById(id, updateData)
     
     if (authError) {
       return NextResponse.json({ success: false, error: authError.message }, { status: 500 })
+    }
+    
+    // Update employee record if unit_id changed
+    if (unit_id !== undefined) {
+      const { error: employeeError } = await adminClient
+        .from('m_employees')
+        .update({ unit_id })
+        .eq('user_id', id)
+      
+      if (employeeError) {
+        return NextResponse.json({ success: false, error: employeeError.message }, { status: 500 })
+      }
     }
     
     // Update employee link if employee_id changed

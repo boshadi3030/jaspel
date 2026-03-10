@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export function Footer() {
   const [footerText, setFooterText] = useState('© 2026 JASPEL Enterprise - All Rights Reserved')
@@ -8,19 +9,15 @@ export function Footer() {
   useEffect(() => {
     const loadFooter = async () => {
       try {
-        const response = await fetch('/api/settings', {
-          headers: {
-            'Cache-Control': 'max-age=300' // Cache for 5 minutes
-          }
-        })
-        if (response.ok) {
-          const data = await response.json()
-          // Priority: footer.text > companyInfo.footer > default
-          if (data?.footer?.text) {
-            setFooterText(data.footer.text)
-          } else if (data?.companyInfo?.footer) {
-            setFooterText(data.companyInfo.footer)
-          }
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('t_settings')
+          .select('value')
+          .eq('key', 'footer')
+          .maybeSingle()
+        
+        if (!error && data?.value?.text) {
+          setFooterText(data.value.text)
         }
       } catch (error) {
         // Use default footer on error

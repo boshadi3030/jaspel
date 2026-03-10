@@ -10,30 +10,30 @@ export async function GET() {
     // Header
     doc.setFontSize(18)
     doc.setFont('helvetica', 'bold')
-    doc.text('PANDUAN MANAJEMEN POOL', 105, yPos, { align: 'center' })
+    doc.text('PANDUAN KONFIGURASI KPI', 105, yPos, { align: 'center' })
     yPos += 10
     doc.setFontSize(12)
     doc.setFont('helvetica', 'normal')
-    doc.text('Sistem JASPEL - Distribusi Insentif', 105, yPos, { align: 'center' })
+    doc.text('Sistem JASPEL - Struktur KPI', 105, yPos, { align: 'center' })
     yPos += 15
 
-    // 1. Konsep Pool
+    // 1. Konsep KPI
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('1. KONSEP POOL', 20, yPos)
+    doc.text('1. KONSEP STRUKTUR KPI', 20, yPos)
     yPos += 8
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     
     const intro = [
-      'Pool adalah kumpulan dana untuk distribusi insentif pegawai',
-      'dalam periode tertentu (bulanan).',
+      'KPI (Key Performance Indicator) adalah indikator kinerja yang',
+      'digunakan untuk mengukur pencapaian pegawai.',
       '',
-      'Komponen Pool:',
-      '- Pendapatan: Sumber dana yang masuk',
-      '- Potongan: Pengurangan dari pendapatan',
-      '- Pool Bersih = Pendapatan - Potongan',
-      '- Jumlah Dialokasikan = Pool Bersih x % Alokasi'
+      'Struktur KPI terdiri dari:',
+      '- Kategori: P1 (Posisi), P2 (Kinerja), P3 (Perilaku)',
+      '- Indikator: Ukuran spesifik dalam setiap kategori',
+      '- Bobot: Persentase kontribusi terhadap total skor',
+      '- Target: Nilai yang harus dicapai'
     ]
     intro.forEach(line => {
       doc.text(line, 20, yPos)
@@ -41,23 +41,26 @@ export async function GET() {
     })
     yPos += 5
 
-    // 2. Status Pool
+    // 2. Kategori KPI
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('2. STATUS POOL', 20, yPos)
+    doc.text('2. KATEGORI KPI', 20, yPos)
     yPos += 8
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     
     const rules = [
-      'Draft: Pool baru, masih dapat diubah',
-      '  - Item pendapatan/potongan dapat ditambah/dihapus',
+      'P1 (Posisi): Indikator berbasis job description',
+      '  - Tugas dan tanggung jawab jabatan',
+      '  - Bobot total: 40-50%',
       '',
-      'Approved: Pool disetujui, tidak dapat diubah',
-      '  - Siap untuk perhitungan distribusi',
+      'P2 (Kinerja): Indikator berbasis output/hasil',
+      '  - Target kuantitatif yang terukur',
+      '  - Bobot total: 30-40%',
       '',
-      'Distributed: Pool sudah didistribusikan',
-      '  - Perhitungan insentif selesai'
+      'P3 (Perilaku): Indikator kompetensi dan perilaku',
+      '  - Soft skills dan attitude',
+      '  - Bobot total: 20-30%'
     ]
     rules.forEach(line => {
       doc.text(line, 20, yPos)
@@ -69,22 +72,22 @@ export async function GET() {
     doc.addPage()
     yPos = 20
 
-    // 3. Cara Membuat Pool
+    // 3. Cara Membuat Kategori
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('3. CARA MEMBUAT POOL', 20, yPos)
+    doc.text('3. CARA MEMBUAT KATEGORI', 20, yPos)
     yPos += 8
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     
     const steps1 = [
-      '1. Klik menu "Manajemen Pool"',
-      '2. Klik tombol "Buat Pool"',
-      '3. Isi Periode (YYYY-MM), contoh: 2024-01',
-      '4. Isi Persentase Alokasi (default: 100%)',
-      '5. Klik "Buat Pool"',
-      '',
-      'Pool dibuat dengan status Draft'
+      '1. Pilih unit dari dropdown',
+      '2. Klik tombol "Tambah Kategori"',
+      '3. Pilih kategori (P1/P2/P3)',
+      '4. Isi nama kategori',
+      '5. Isi bobot persentase (total harus 100%)',
+      '6. Isi deskripsi (opsional)',
+      '7. Klik "Simpan"'
     ]
     steps1.forEach(line => {
       doc.text(line, 20, yPos)
@@ -92,31 +95,33 @@ export async function GET() {
     })
     yPos += 5
 
-    // 4. Mengelola Item
+    // 4. Mengelola Indikator
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('4. MENGELOLA ITEM PENDAPATAN & POTONGAN', 20, yPos)
+    doc.text('4. MENGELOLA INDIKATOR', 20, yPos)
     yPos += 8
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     
     const steps2 = [
-      'Menambah Item Pendapatan:',
-      '1. Klik "Lihat" pada pool (status Draft)',
-      '2. Di bagian "Item Pendapatan"',
-      '3. Isi deskripsi dan jumlah',
-      '4. Klik "Tambah"',
+      'Menambah Indikator:',
+      '1. Klik tombol "+" pada kategori',
+      '2. Isi kode indikator (contoh: P1.1)',
+      '3. Isi nama indikator',
+      '4. Isi target nilai',
+      '5. Isi bobot persentase',
+      '6. Isi satuan pengukuran',
+      '7. Isi deskripsi (opsional)',
+      '8. Klik "Simpan"',
       '',
-      'Menambah Item Potongan:',
-      '1. Di bagian "Item Potongan"',
-      '2. Isi deskripsi dan jumlah',
-      '3. Klik "Tambah"',
+      'Mengedit Indikator:',
+      '1. Klik tombol edit pada indikator',
+      '2. Ubah data yang diperlukan',
+      '3. Klik "Simpan"',
       '',
-      'Sistem otomatis menghitung:',
-      '- Total Pendapatan',
-      '- Total Potongan',
-      '- Pool Bersih',
-      '- Jumlah Dialokasikan'
+      'Menghapus Indikator:',
+      '1. Klik tombol hapus pada indikator',
+      '2. Konfirmasi penghapusan'
     ]
     steps2.forEach(line => {
       doc.text(line, 20, yPos)
@@ -128,24 +133,25 @@ export async function GET() {
     doc.addPage()
     yPos = 20
 
-    // 5. Persetujuan Pool
+    // 5. Salin Struktur
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('5. PERSETUJUAN POOL', 20, yPos)
+    doc.text('5. SALIN STRUKTUR KPI', 20, yPos)
     yPos += 10
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     
     const approval = [
-      'Setelah semua item lengkap:',
-      '1. Klik tombol "Setujui" (hijau)',
-      '2. Konfirmasi persetujuan',
-      '3. Status berubah menjadi "Approved"',
+      'Untuk menyalin struktur KPI dari satu unit ke unit lain:',
+      '1. Klik tombol "Salin Struktur"',
+      '2. Pilih unit sumber (yang akan disalin)',
+      '3. Pilih unit tujuan (yang akan menerima)',
+      '4. Klik "Salin"',
       '',
-      'Setelah disetujui:',
-      '- Pool tidak dapat diubah lagi',
-      '- Siap untuk perhitungan distribusi',
-      '- Tercatat user dan waktu persetujuan'
+      'Catatan:',
+      '- Struktur yang ada di unit tujuan akan ditimpa',
+      '- Semua kategori dan indikator akan disalin',
+      '- Bobot akan sama dengan unit sumber'
     ]
     approval.forEach(line => {
       doc.text(line, 20, yPos)
@@ -153,46 +159,30 @@ export async function GET() {
     })
     yPos += 10
 
-    // 6. Contoh Perhitungan
+    // 6. Contoh Struktur
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('6. CONTOH PERHITUNGAN', 20, yPos)
+    doc.text('6. CONTOH STRUKTUR KPI', 20, yPos)
     yPos += 8
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
-    doc.text('Pool Januari 2024:', 20, yPos)
+    doc.text('Unit: Instalasi Rawat Jalan', 20, yPos)
     yPos += 8
 
     autoTable(doc, {
       startY: yPos,
-      head: [['Item', 'Jumlah']],
+      head: [['Kategori', 'Bobot', 'Indikator', 'Target']],
       body: [
-        ['Total Pendapatan', 'Rp 700.000.000'],
-        ['Total Potongan', 'Rp 180.000.000'],
-        ['Pool Bersih', 'Rp 520.000.000'],
-        ['Alokasi (100%)', 'Rp 520.000.000']
+        ['P1 - Posisi', '45%', 'Ketepatan waktu pelayanan', '95%'],
+        ['', '', 'Kelengkapan dokumentasi', '100%'],
+        ['P2 - Kinerja', '35%', 'Jumlah pasien dilayani', '500/bulan'],
+        ['', '', 'Tingkat kepuasan pasien', '90%'],
+        ['P3 - Perilaku', '20%', 'Kerjasama tim', '4.5/5'],
+        ['', '', 'Komunikasi efektif', '4.5/5']
       ],
       theme: 'grid',
       styles: { fontSize: 9 },
       headStyles: { fillColor: [66, 139, 202] }
-    })
-
-    yPos = (doc as any).lastAutoTable.finalY + 10
-
-    doc.text('Distribusi ke Unit:', 20, yPos)
-    yPos += 5
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [['Unit', 'Proporsi', 'Alokasi']],
-      body: [
-        ['Unit A', '40%', 'Rp 208.000.000'],
-        ['Unit B', '35%', 'Rp 182.000.000'],
-        ['Unit C', '25%', 'Rp 130.000.000']
-      ],
-      theme: 'grid',
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [92, 184, 92] }
     })
 
     yPos = (doc as any).lastAutoTable.finalY + 10
@@ -206,17 +196,17 @@ export async function GET() {
     doc.setFont('helvetica', 'normal')
     
     const formulas = [
-      'Pool Bersih = Total Pendapatan - Total Potongan',
+      'Skor Indikator = (Realisasi / Target) x 100',
       '',
-      'Jumlah Dialokasikan = Pool Bersih x % Alokasi',
+      'Skor Kategori = Σ (Skor Indikator x Bobot Indikator)',
       '',
-      'Alokasi Unit = Jumlah Dialokasikan x % Proporsi Unit',
+      'Skor Total = Σ (Skor Kategori x Bobot Kategori)',
       '',
-      'Insentif Pegawai = Alokasi Unit x (Skor Pegawai / Total Skor Unit)',
-      '',
-      'Pajak = Insentif Bruto x Tarif Pajak',
-      '',
-      'Insentif Neto = Insentif Bruto - Pajak'
+      'Contoh:',
+      'P1 = 90 x 45% = 40.5',
+      'P2 = 85 x 35% = 29.75',
+      'P3 = 95 x 20% = 19',
+      'Total = 89.25'
     ]
     formulas.forEach(line => {
       doc.text(line, 20, yPos)
@@ -226,7 +216,7 @@ export async function GET() {
     // Footer
     doc.setFontSize(8)
     doc.setTextColor(128, 128, 128)
-    doc.text('Sistem JASPEL - Manajemen Pool', 105, 280, { align: 'center' })
+    doc.text('Sistem JASPEL - Konfigurasi KPI', 105, 280, { align: 'center' })
     doc.text(new Date().toLocaleDateString('id-ID'), 105, 285, { align: 'center' })
 
     // Generate PDF
@@ -235,7 +225,7 @@ export async function GET() {
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="Panduan_Manajemen_Pool.pdf"'
+        'Content-Disposition': 'attachment; filename="Panduan_Konfigurasi_KPI.pdf"'
       }
     })
   } catch (error) {

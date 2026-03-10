@@ -22,6 +22,11 @@ interface Pegawai {
   unit_id: string
 }
 
+interface Unit {
+  id: string
+  name: string
+}
+
 const roleLabels: Record<string, string> = {
   superadmin: 'Superadmin',
   unit_manager: 'Manajer Unit',
@@ -31,10 +36,12 @@ const roleLabels: Record<string, string> = {
 export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialogProps) {
   const [formData, setFormData] = useState({
     role: 'employee' as 'superadmin' | 'unit_manager' | 'employee',
+    unit_id: '',
     password: '',
     employee_ids: [] as string[],
   })
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>([])
+  const [unitList, setUnitList] = useState<Unit[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [tempPassword, setTempPassword] = useState('')
@@ -42,15 +49,18 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
   useEffect(() => {
     if (open) {
       loadPegawai()
+      loadUnits()
       if (user) {
         setFormData({
           role: user.role,
+          unit_id: user.pegawai?.unit_id || '',
           password: '',
           employee_ids: user.employee_id ? [user.employee_id] : [],
         })
       } else {
         setFormData({
           role: 'employee',
+          unit_id: '',
           password: '',
           employee_ids: [],
         })
@@ -66,11 +76,24 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
       .from('m_employees')
       .select('id, employee_code, full_name, unit_id')
       .eq('is_active', true)
-      .is('user_id', null) // Only show employees without user accounts
+      .is('user_id', null)
       .order('full_name')
     
     if (data) {
       setPegawaiList(data)
+    }
+  }
+  
+  const loadUnits = async () => {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('m_units')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name')
+    
+    if (data) {
+      setUnitList(data)
     }
   }
   
@@ -98,7 +121,7 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
     
     try {
       if (!user) {
-        // Create new user - validate required fields
+        // Create new user
         if (!formData.password) {
           setError('Password wajib diisi untuk pengguna baru')
           setLoading(false)
@@ -111,7 +134,6 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
           return
         }
         
-        // Create users for each selected employee
         let successCount = 0
         let failedEmployees: string[] = []
         
@@ -119,7 +141,6 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
           const employee = pegawaiList.find(p => p.id === employeeId)
           if (!employee) continue
           
-          // Generate email from employee code
           const email = `${employee.employee_code.toLowerCase()}@jaspel.local`
           
           const response = await fetch('/api/users/create', {
@@ -155,6 +176,18 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
         }
       } else {
         // Update existing user
+        if (!formData.role) {
+          setError('Peran wajib dipilih')
+          setLoading(false)
+          return
+        }
+        
+        if (!formData.unit_id) {
+          setError('Unit wajib dipilih')
+          setLoading(false)
+          return
+        }
+        
         const response = await fetch('/api/users/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -162,6 +195,7 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
             id: user.id,
             email: user.email,
             role: formData.role,
+            unit_id: formData.unit_id,
             employee_id: formData.employee_ids[0] || null,
           })
         })
@@ -197,72 +231,125 @@ export function UserFormDialog({ open, onClose, onSuccess, user }: UserFormDialo
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {user && (
+            <>
+              <div>
+                <Label>Nama</Label>
+                <Input
+                  value={user.pegawai?.full_name || '-'}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <Label>Email</Label>
+                <Input
+                  value={user.email}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+            </>
+          )}
+          
           <div>
             <Label htmlFor="role">Peran *</Label>
             <select
               id="role"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-              className="w-full border rounded-md p-2"
+              className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="employee">{roleLabels.employee}</option>
               <option value="unit_manager">{roleLabels.unit_manager}</option>
               <option value="superadmin">{roleLabels.superadmin}</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Pilih peran untuk menentukan hak akses pengguna
+            </p>
           </div>
           
-          {!user && (
+          {user && (
             <div>
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              <Label htmlFor="unit_id">Unit *</Label>
+              <select
+                id="unit_id"
+                value={formData.unit_id}
+                onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
+                className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
-                placeholder="Minimal 6 karakter"
-              />
+              >
+                <option value="">-- Pilih Unit --</option>
+                {unitList.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
               <p className="text-xs text-gray-500 mt-1">
-                Password ini akan digunakan untuk semua pegawai yang dipilih
+                Pilih unit untuk pegawai ini
               </p>
             </div>
           )}
           
-          <div>
-            <Label htmlFor="employee_ids">Pilih Pegawai *</Label>
-            <div className="border rounded-md p-3 max-h-60 overflow-y-auto space-y-2">
-              {pegawaiList.length === 0 ? (
-                <p className="text-sm text-gray-500">Tidak ada pegawai tersedia</p>
-              ) : (
-                pegawaiList.map((pegawai) => (
-                  <label
-                    key={pegawai.id}
-                    className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.employee_ids.includes(pegawai.id)}
-                      onChange={() => handleEmployeeToggle(pegawai.id)}
-                      className="h-4 w-4"
-                      disabled={user !== null && user !== undefined} // Disable for edit mode
-                    />
-                    <span className="text-sm">
-                      {pegawai.employee_code} - {pegawai.full_name}
-                    </span>
-                  </label>
-                ))
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {user ? 'Tidak dapat mengubah pegawai untuk pengguna yang sudah ada' : 'Pilih satu atau lebih pegawai dengan peran yang sama'}
-            </p>
-            {!user && formData.employee_ids.length > 0 && (
-              <p className="text-xs text-blue-600 mt-1">
-                {formData.employee_ids.length} pegawai dipilih
-              </p>
-            )}
-          </div>
+          {!user && (
+            <>
+              <div>
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  placeholder="Minimal 6 karakter"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Password ini akan digunakan untuk semua pegawai yang dipilih
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="employee_ids">Pilih Pegawai *</Label>
+                <div className="border rounded-md p-3 max-h-60 overflow-y-auto space-y-2">
+                  {pegawaiList.length === 0 ? (
+                    <p className="text-sm text-gray-500">Tidak ada pegawai tersedia</p>
+                  ) : (
+                    pegawaiList.map((pegawai) => {
+                      const unit = unitList.find(u => u.id === pegawai.unit_id)
+                      return (
+                        <label
+                          key={pegawai.id}
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.employee_ids.includes(pegawai.id)}
+                            onChange={() => handleEmployeeToggle(pegawai.id)}
+                            className="h-4 w-4"
+                          />
+                          <span className="text-sm">
+                            {pegawai.employee_code} - {pegawai.full_name}
+                            {unit && <span className="text-gray-500"> ({unit.name})</span>}
+                          </span>
+                        </label>
+                      )
+                    })
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Pilih satu atau lebih pegawai dengan peran yang sama
+                </p>
+                {formData.employee_ids.length > 0 && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    {formData.employee_ids.length} pegawai dipilih
+                  </p>
+                )}
+              </div>
+            </>
+          )}
           
           {error && (
             <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">

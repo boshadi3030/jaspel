@@ -27,6 +27,11 @@ interface Settings {
     'K/2': number
     'K/3': number
   }
+  ter_rates: {
+    categoryA: number
+    categoryB: number
+    categoryC: number
+  }
   calculation_params: {
     minScore: number
     maxScore: number
@@ -53,6 +58,11 @@ export default function SettingsPage() {
       'K/1': 15,
       'K/2': 25,
       'K/3': 30
+    },
+    ter_rates: {
+      categoryA: 0,
+      categoryB: 0,
+      categoryC: 0
     },
     calculation_params: {
       minScore: 0,
@@ -93,6 +103,7 @@ export default function SettingsPage() {
       const orgSettings = settingsMap.company_info || {}
       const footerSettings = settingsMap.footer || {}
       const taxRates = settingsMap.tax_rates || {}
+      const terRates = settingsMap.ter_rates || {}
       const calcParams = settingsMap.calculation_params || {}
       const sessionTimeout = settingsMap.session_timeout || {}
       
@@ -112,6 +123,11 @@ export default function SettingsPage() {
           'K/1': taxRates['K1'] || taxRates['K/1'] || 15,
           'K/2': taxRates['K2'] || taxRates['K/2'] || 25,
           'K/3': taxRates['K3'] || taxRates['K/3'] || 30
+        },
+        ter_rates: {
+          categoryA: terRates.categoryA ?? 0,
+          categoryB: terRates.categoryB ?? 0,
+          categoryC: terRates.categoryC ?? 0
         },
         calculation_params: {
           minScore: calcParams.minScore ?? 0,
@@ -251,16 +267,19 @@ export default function SettingsPage() {
         throw footerError
       }
 
-      // Upsert tax rates (convert keys to match database format)
-      const taxRatesData: Record<string, number> = {
-        'TK0': settings.tax_rates['TK/0'],
-        'K0': settings.tax_rates['K/0'],
-        'K1': settings.tax_rates['K/1'],
-        'K2': settings.tax_rates['K/2'],
-        'K3': settings.tax_rates['K/3']
+      // Upsert tax rates (PPh 21 based on PTKP status)
+      const taxRatesData = {
+        'TK/0': settings.tax_rates['TK/0'],
+        'TK/1': settings.tax_rates['TK/1'],
+        'TK/2': settings.tax_rates['TK/2'],
+        'TK/3': settings.tax_rates['TK/3'],
+        'K/0': settings.tax_rates['K/0'],
+        'K/1': settings.tax_rates['K/1'],
+        'K/2': settings.tax_rates['K/2'],
+        'K/3': settings.tax_rates['K/3']
       }
 
-      const { error: taxError } = await supabase
+      const { error: taxRatesError } = await supabase
         .from('t_settings')
         .upsert({ 
           key: 'tax_rates', 
@@ -269,9 +288,24 @@ export default function SettingsPage() {
           updated_at: new Date().toISOString()
         }, { onConflict: 'key' })
 
-      if (taxError) {
-        console.error('Tax rates error:', taxError)
-        throw taxError
+      if (taxRatesError) {
+        console.error('Tax rates error:', taxRatesError)
+        throw taxRatesError
+      }
+
+      // Upsert TER rates
+      const { error: terRatesError } = await supabase
+        .from('t_settings')
+        .upsert({ 
+          key: 'ter_rates', 
+          value: settings.ter_rates,
+          updated_by: user?.id,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' })
+
+      if (terRatesError) {
+        console.error('TER rates error:', terRatesError)
+        throw terRatesError
       }
 
       // Upsert calculation params
@@ -452,92 +486,152 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Konfigurasi Pajak PPh 21</CardTitle>
-            <CardDescription>Persentase pajak berdasarkan status PTKP (dalam %)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="tax_tk0">TK/0 (Tidak Kawin, 0 Tanggungan)</Label>
-                <Input
-                  id="tax_tk0"
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="0.1"
-                  value={settings.tax_rates['TK/0']}
-                  onChange={(e) => setSettings({ 
-                    ...settings, 
-                    tax_rates: { ...settings.tax_rates, 'TK/0': parseFloat(e.target.value) || 0 }
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tax_k0">K/0 (Kawin, 0 Tanggungan)</Label>
-                <Input
-                  id="tax_k0"
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="0.1"
-                  value={settings.tax_rates['K/0']}
-                  onChange={(e) => setSettings({ 
-                    ...settings, 
-                    tax_rates: { ...settings.tax_rates, 'K/0': parseFloat(e.target.value) || 0 }
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tax_k1">K/1 (Kawin, 1 Tanggungan)</Label>
-                <Input
-                  id="tax_k1"
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="0.1"
-                  value={settings.tax_rates['K/1']}
-                  onChange={(e) => setSettings({ 
-                    ...settings, 
-                    tax_rates: { ...settings.tax_rates, 'K/1': parseFloat(e.target.value) || 0 }
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tax_k2">K/2 (Kawin, 2 Tanggungan)</Label>
-                <Input
-                  id="tax_k2"
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="0.1"
-                  value={settings.tax_rates['K/2']}
-                  onChange={(e) => setSettings({ 
-                    ...settings, 
-                    tax_rates: { ...settings.tax_rates, 'K/2': parseFloat(e.target.value) || 0 }
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tax_k3">K/3 (Kawin, 3 Tanggungan)</Label>
-                <Input
-                  id="tax_k3"
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="0.1"
-                  value={settings.tax_rates['K/3']}
-                  onChange={(e) => setSettings({ 
-                    ...settings, 
-                    tax_rates: { ...settings.tax_rates, 'K/3': parseFloat(e.target.value) || 0 }
-                  })}
-                />
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Konfigurasi Pajak PPh 21</CardTitle>
+          <CardDescription>Persentase pajak berdasarkan status PTKP (dalam %)</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="tax_tk0">TK/0 (Tidak Kawin, 0 Tanggungan)</Label>
+              <Input
+                id="tax_tk0"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.tax_rates['TK/0']}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  tax_rates: { ...settings.tax_rates, 'TK/0': parseFloat(e.target.value) || 0 }
+                })}
+              />
             </div>
-          </CardContent>
-        </Card>
+            <div className="space-y-2">
+              <Label htmlFor="tax_k0">K/0 (Kawin, 0 Tanggungan)</Label>
+              <Input
+                id="tax_k0"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.tax_rates['K/0']}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  tax_rates: { ...settings.tax_rates, 'K/0': parseFloat(e.target.value) || 0 }
+                })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tax_k1">K/1 (Kawin, 1 Tanggungan)</Label>
+              <Input
+                id="tax_k1"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.tax_rates['K/1']}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  tax_rates: { ...settings.tax_rates, 'K/1': parseFloat(e.target.value) || 0 }
+                })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tax_k2">K/2 (Kawin, 2 Tanggungan)</Label>
+              <Input
+                id="tax_k2"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.tax_rates['K/2']}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  tax_rates: { ...settings.tax_rates, 'K/2': parseFloat(e.target.value) || 0 }
+                })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tax_k3">K/3 (Kawin, 3 Tanggungan)</Label>
+              <Input
+                id="tax_k3"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.tax_rates['K/3']}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  tax_rates: { ...settings.tax_rates, 'K/3': parseFloat(e.target.value) || 0 }
+                })}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Konfigurasi Tarif Efektif Rata-rata (TER)</CardTitle>
+          <CardDescription>Tarif pajak berdasarkan kategori penghasilan bruto (dalam %)</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ter_category_a">Kategori A (Penghasilan s.d. Rp 5.000.000)</Label>
+              <Input
+                id="ter_category_a"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.ter_rates.categoryA}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  ter_rates: { ...settings.ter_rates, categoryA: parseFloat(e.target.value) || 0 }
+                })}
+              />
+              <p className="text-xs text-gray-500">Tarif untuk penghasilan bruto bulanan sampai dengan Rp 5.000.000</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ter_category_b">Kategori B (Penghasilan Rp 5.000.001 - Rp 15.000.000)</Label>
+              <Input
+                id="ter_category_b"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.ter_rates.categoryB}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  ter_rates: { ...settings.ter_rates, categoryB: parseFloat(e.target.value) || 0 }
+                })}
+              />
+              <p className="text-xs text-gray-500">Tarif untuk penghasilan bruto bulanan Rp 5.000.001 sampai Rp 15.000.000</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ter_category_c">Kategori C (Penghasilan di atas Rp 15.000.000)</Label>
+              <Input
+                id="ter_category_c"
+                type="number"
+                min="0"
+                max="50"
+                step="0.1"
+                value={settings.ter_rates.categoryC}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  ter_rates: { ...settings.ter_rates, categoryC: parseFloat(e.target.value) || 0 }
+                })}
+              />
+              <p className="text-xs text-gray-500">Tarif untuk penghasilan bruto bulanan di atas Rp 15.000.000</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 md:grid-cols-2">
 
         <Card>
           <CardHeader>

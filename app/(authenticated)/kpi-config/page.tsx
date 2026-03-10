@@ -289,31 +289,6 @@ export default function KPIConfigPage() {
               ))}
             </SelectContent>
           </Select>
-          
-          {/* Quick Unit Buttons */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm font-medium text-gray-700 mb-3">Akses Cepat:</p>
-            <div className="flex flex-wrap gap-2">
-              {units.slice(0, 6).map(unit => (
-                <button
-                  key={unit.id}
-                  onClick={() => setSelectedUnit(unit.id)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all transform hover:scale-105 ${
-                    selectedUnit === unit.id
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg ring-2 ring-blue-300'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700 shadow-md hover:shadow-lg'
-                  }`}
-                >
-                  {unit.code}
-                </button>
-              ))}
-              {units.length > 6 && (
-                <span className="px-4 py-2.5 text-sm font-medium text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-                  +{units.length - 6} lainnya
-                </span>
-              )}
-            </div>
-          </div>
         </CardContent>
       </Card>
 

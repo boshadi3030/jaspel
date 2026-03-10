@@ -81,13 +81,35 @@ export async function getUsers(
       return { data: [], count: 0, error: error.message }
     }
     
-    // Get auth users to get email and role
-    const adminClient = await createClient()
-    const { data: authUsers } = await adminClient.auth.admin.listUsers()
+    // Get auth users to get email and role using service role
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js')
+    const adminClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        },
+        global: {
+          headers: {
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+          }
+        }
+      }
+    )
+    const { data: authUsersData, error: authError } = await adminClient.auth.admin.listUsers()
+    
+    if (authError) {
+      console.error('Error fetching auth users:', authError)
+      return { data: [], count: 0, error: authError.message }
+    }
+    
+    const authUsers = authUsersData
     
     // Transform data to match UserWithPegawai type
     const transformedData: UserWithPegawai[] = (data || []).map((employee: any) => {
-      const authUser = authUsers?.users.find(u => u.id === employee.user_id)
+      const authUser = authUsers.users.find(u => u.id === employee.user_id)
       const unit = Array.isArray(employee.m_units) ? employee.m_units[0] : employee.m_units
       
       return {

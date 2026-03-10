@@ -1,33 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSettingsServer } from '@/lib/services/settings.server.service'
-import { updateSettings } from '@/lib/services/settings.service'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await getSettingsServer()
+    // Create admin client directly without cookies (for API routes)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+    
+    const { data, error } = await supabase
+      .from('t_settings')
+      .select('key, value')
     
     if (error) {
-      return NextResponse.json({ error }, { status: 500 })
+      console.error('Settings API error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
-    return NextResponse.json(data)
+    // Transform to object format
+    const settings: any = {}
+    data?.forEach((item) => {
+      settings[item.key] = item.value
+    })
+    
+    return NextResponse.json(settings)
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    const settings = await request.json()
-    
-    const { success, error } = await updateSettings(settings)
-    
-    if (!success) {
-      return NextResponse.json({ error }, { status: 400 })
-    }
-    
-    return NextResponse.json({ success: true })
-  } catch (error: any) {
+    console.error('Settings API exception:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

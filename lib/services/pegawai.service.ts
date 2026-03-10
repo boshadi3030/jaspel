@@ -15,7 +15,7 @@ export async function getPegawai(
     let query = supabase
       .from('m_employees')
       .select(`
-        id, employee_code, full_name, unit_id, position, phone, address, 
+        id, employee_code, full_name, unit_id, position, phone, 
         nik, bank_name, bank_account_number, bank_account_name,
         tax_status, is_active, created_at, updated_at, 
         m_units(name)
@@ -239,12 +239,28 @@ export async function deactivatePegawai(
 }
 
 /**
- * Delete a pegawai (soft delete by deactivating)
+ * Delete a pegawai (hard delete)
  */
 export async function deletePegawai(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
-  return deactivatePegawai(id)
+  try {
+    const supabase = createClient()
+    
+    // Delete pegawai record (will cascade to related data via RLS)
+    const { error } = await supabase
+      .from('m_employees')
+      .delete()
+      .eq('id', id)
+    
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
 }
 
 /**
@@ -283,5 +299,48 @@ export async function getPegawaiByUnit(
     return { data: transformedData }
   } catch (err: any) {
     return { data: [], error: err.message }
+  }
+}
+
+/**
+ * Hard delete a pegawai (only if no realization data exists)
+ */
+export async function hardDeletePegawai(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createClient()
+    
+    // Check if pegawai has realization data
+    const { data: realizationData, error: realizationError } = await supabase
+      .from('t_realization')
+      .select('id')
+      .eq('employee_id', id)
+      .limit(1)
+    
+    if (realizationError) {
+      return { success: false, error: realizationError.message }
+    }
+    
+    if (realizationData && realizationData.length > 0) {
+      return { 
+        success: false, 
+        error: 'Tidak dapat menghapus pegawai yang memiliki data realisasi. Gunakan nonaktifkan sebagai gantinya.' 
+      }
+    }
+    
+    // Delete pegawai record
+    const { error } = await supabase
+      .from('m_employees')
+      .delete()
+      .eq('id', id)
+    
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message }
   }
 }

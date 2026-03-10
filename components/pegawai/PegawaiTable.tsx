@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { deactivatePegawai } from '@/lib/services/pegawai.service'
+import { deactivatePegawai, deletePegawai } from '@/lib/services/pegawai.service'
 import { Button } from '@/components/ui/button'
-import { Edit, Ban, CheckCircle } from 'lucide-react'
+import { Edit, Ban, CheckCircle, Trash2 } from 'lucide-react'
 import type { Pegawai } from '@/lib/types/database.types'
 
 interface PegawaiTableProps {
@@ -27,6 +27,23 @@ export function PegawaiTable({ pegawai, loading, onEdit, onRefresh }: PegawaiTab
     
     if (result.success) {
       alert('Pegawai berhasil dinonaktifkan')
+      onRefresh()
+    } else {
+      alert(`Gagal: ${result.error}`)
+    }
+  }
+  
+  const handleDelete = async (pegawai: Pegawai) => {
+    if (!confirm(`PERINGATAN: Apakah Anda yakin ingin menghapus ${pegawai.full_name}?\n\nTindakan ini akan menghapus:\n- Data pegawai\n- Semua data KPI dan realisasi terkait\n\nTindakan ini TIDAK DAPAT DIBATALKAN!`)) {
+      return
+    }
+    
+    setActionLoading(pegawai.id)
+    const result = await deletePegawai(pegawai.id)
+    setActionLoading(null)
+    
+    if (result.success) {
+      alert('Pegawai berhasil dihapus')
       onRefresh()
     } else {
       alert(`Gagal: ${result.error}`)
@@ -95,6 +112,7 @@ export function PegawaiTable({ pegawai, loading, onEdit, onRefresh }: PegawaiTab
                   size="sm"
                   variant="outline"
                   onClick={() => onEdit(p)}
+                  title="Edit"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -104,10 +122,21 @@ export function PegawaiTable({ pegawai, loading, onEdit, onRefresh }: PegawaiTab
                     variant="outline"
                     onClick={() => handleDeactivate(p)}
                     disabled={actionLoading === p.id}
+                    title="Nonaktifkan"
                   >
                     <Ban className="h-4 w-4" />
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDelete(p)}
+                  disabled={actionLoading === p.id}
+                  title="Hapus"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </td>
             </tr>
           ))}

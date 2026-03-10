@@ -1,47 +1,46 @@
 /**
- * Test script untuk memverifikasi API settings berfungsi dengan baik
- * 
- * Usage: npx tsx scripts/test-settings-api.ts
+ * Test Settings API
+ * Verifies that /api/settings endpoint works correctly
  */
 
 async function testSettingsAPI() {
-  const baseUrl = 'http://localhost:3003' // Sesuaikan dengan port yang digunakan
-  
   console.log('🧪 Testing Settings API...\n')
-  
+
   try {
-    // Test GET /api/settings
-    console.log('1️⃣ Testing GET /api/settings...')
-    const response = await fetch(`${baseUrl}/api/settings`)
-    
+    const response = await fetch('http://localhost:3002/api/settings', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    console.log(`Status: ${response.status} ${response.statusText}`)
+
     if (!response.ok) {
-      console.error(`❌ GET request failed with status: ${response.status}`)
       const errorText = await response.text()
-      console.error('Error details:', errorText)
-      return
+      console.error('❌ Error Response:', errorText)
+      process.exit(1)
     }
-    
+
     const data = await response.json()
-    console.log('✅ GET request successful!')
-    console.log('Settings data:', JSON.stringify(data, null, 2))
+    console.log('\n✅ Settings API Response:')
+    console.log(JSON.stringify(data, null, 2))
+
+    // Verify expected keys
+    const expectedKeys = ['company_info', 'footer', 'calculation_params', 'session_timeout', 'ter_rates', 'tax_rates']
+    const missingKeys = expectedKeys.filter(key => !(key in data))
     
-    // Check if companyInfo exists
-    if (data.companyInfo) {
-      console.log('\n✅ Company info found:')
-      console.log(`   - App Name: ${data.companyInfo.appName}`)
-      console.log(`   - Company: ${data.companyInfo.name}`)
-      console.log(`   - Address: ${data.companyInfo.address}`)
+    if (missingKeys.length > 0) {
+      console.warn('\n⚠️  Missing keys:', missingKeys)
     } else {
-      console.log('\n⚠️  No company info found in settings')
+      console.log('\n✅ All expected keys present')
     }
-    
-    console.log('\n✅ All tests passed!')
-    
+
+    console.log('\n✅ Settings API test passed!')
   } catch (error: any) {
-    console.error('❌ Test failed with error:', error.message)
-    console.error('Stack trace:', error.stack)
+    console.error('❌ Test failed:', error.message)
+    process.exit(1)
   }
 }
 
-// Run tests
 testSettingsAPI()

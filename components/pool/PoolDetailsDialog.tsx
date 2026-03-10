@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/format'
 
 interface Pool {
@@ -58,9 +58,11 @@ export default function PoolDetailsDialog({
   
   // Revenue form
   const [revenueForm, setRevenueForm] = useState({ description: '', amount: '' })
+  const [editingRevenue, setEditingRevenue] = useState<string | null>(null)
   
   // Deduction form
   const [deductionForm, setDeductionForm] = useState({ description: '', amount: '' })
+  const [editingDeduction, setEditingDeduction] = useState<string | null>(null)
 
   useEffect(() => {
     if (pool && open) {
@@ -109,24 +111,53 @@ export default function PoolDetailsDialog({
 
     try {
       const supabase = createClient()
-      const { error } = await supabase
-        .from('t_pool_revenue')
-        .insert({
-          pool_id: pool.id,
-          description: revenueForm.description,
-          amount: parseFloat(revenueForm.amount)
-        })
+      
+      if (editingRevenue) {
+        // Update existing revenue
+        const { error } = await supabase
+          .from('t_pool_revenue')
+          .update({
+            description: revenueForm.description,
+            amount: parseFloat(revenueForm.amount)
+          })
+          .eq('id', editingRevenue)
 
-      if (error) throw error
+        if (error) throw error
+        setEditingRevenue(null)
+      } else {
+        // Insert new revenue
+        const { error } = await supabase
+          .from('t_pool_revenue')
+          .insert({
+            pool_id: pool.id,
+            description: revenueForm.description,
+            amount: parseFloat(revenueForm.amount)
+          })
+
+        if (error) throw error
+      }
 
       await updatePoolTotals()
       setRevenueForm({ description: '', amount: '' })
       await loadPoolItems()
       onUpdate()
     } catch (error: any) {
-      console.error('Error adding revenue:', error)
-      alert(error.message || 'Gagal menambahkan pendapatan')
+      console.error('Error saving revenue:', error)
+      alert(error.message || 'Gagal menyimpan pendapatan')
     }
+  }
+
+  function handleEditRevenue(item: RevenueItem) {
+    setEditingRevenue(item.id)
+    setRevenueForm({
+      description: item.description,
+      amount: item.amount.toString()
+    })
+  }
+
+  function handleCancelEditRevenue() {
+    setEditingRevenue(null)
+    setRevenueForm({ description: '', amount: '' })
   }
 
   async function handleDeleteRevenue(id: string) {
@@ -164,24 +195,53 @@ export default function PoolDetailsDialog({
 
     try {
       const supabase = createClient()
-      const { error } = await supabase
-        .from('t_pool_deduction')
-        .insert({
-          pool_id: pool.id,
-          description: deductionForm.description,
-          amount: parseFloat(deductionForm.amount)
-        })
+      
+      if (editingDeduction) {
+        // Update existing deduction
+        const { error } = await supabase
+          .from('t_pool_deduction')
+          .update({
+            description: deductionForm.description,
+            amount: parseFloat(deductionForm.amount)
+          })
+          .eq('id', editingDeduction)
 
-      if (error) throw error
+        if (error) throw error
+        setEditingDeduction(null)
+      } else {
+        // Insert new deduction
+        const { error } = await supabase
+          .from('t_pool_deduction')
+          .insert({
+            pool_id: pool.id,
+            description: deductionForm.description,
+            amount: parseFloat(deductionForm.amount)
+          })
+
+        if (error) throw error
+      }
 
       await updatePoolTotals()
       setDeductionForm({ description: '', amount: '' })
       await loadPoolItems()
       onUpdate()
     } catch (error: any) {
-      console.error('Error adding deduction:', error)
-      alert(error.message || 'Gagal menambahkan potongan')
+      console.error('Error saving deduction:', error)
+      alert(error.message || 'Gagal menyimpan potongan')
     }
+  }
+
+  function handleEditDeduction(item: DeductionItem) {
+    setEditingDeduction(item.id)
+    setDeductionForm({
+      description: item.description,
+      amount: item.amount.toString()
+    })
+  }
+
+  function handleCancelEditDeduction() {
+    setEditingDeduction(null)
+    setDeductionForm({ description: '', amount: '' })
   }
 
   async function handleDeleteDeduction(id: string) {
@@ -304,8 +364,13 @@ export default function PoolDetailsDialog({
                 />
                 <Button onClick={handleAddRevenue} size="sm">
                   <Plus className="h-4 w-4 mr-1" />
-                  Tambah
+                  {editingRevenue ? 'Simpan' : 'Tambah'}
                 </Button>
+                {editingRevenue && (
+                  <Button onClick={handleCancelEditRevenue} size="sm" variant="outline">
+                    Batal
+                  </Button>
+                )}
               </div>
             )}
 
@@ -321,13 +386,22 @@ export default function PoolDetailsDialog({
                     <div className="flex items-center gap-3">
                       <p className="font-semibold">{formatCurrency(item.amount)}</p>
                       {isDraft && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteRevenue(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditRevenue(item)}
+                          >
+                            <Pencil className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteRevenue(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -358,8 +432,13 @@ export default function PoolDetailsDialog({
                 />
                 <Button onClick={handleAddDeduction} size="sm">
                   <Plus className="h-4 w-4 mr-1" />
-                  Tambah
+                  {editingDeduction ? 'Simpan' : 'Tambah'}
                 </Button>
+                {editingDeduction && (
+                  <Button onClick={handleCancelEditDeduction} size="sm" variant="outline">
+                    Batal
+                  </Button>
+                )}
               </div>
             )}
 
@@ -375,13 +454,22 @@ export default function PoolDetailsDialog({
                     <div className="flex items-center gap-3">
                       <p className="font-semibold">{formatCurrency(item.amount)}</p>
                       {isDraft && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteDeduction(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditDeduction(item)}
+                          >
+                            <Pencil className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteDeduction(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>

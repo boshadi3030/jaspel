@@ -59,12 +59,15 @@ export default function Sidebar() {
   useEffect(() => {
     const loadCompanyInfo = async () => {
       try {
-        const response = await fetch('/api/settings', {
-          headers: { 'Cache-Control': 'max-age=300' }
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setCompanyInfo(data?.companyInfo || null)
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('t_settings')
+          .select('value')
+          .eq('key', 'company_info')
+          .maybeSingle()
+        
+        if (!error && data) {
+          setCompanyInfo(data.value || null)
         }
       } catch (error) {
         console.error('Failed to load company info:', error)
