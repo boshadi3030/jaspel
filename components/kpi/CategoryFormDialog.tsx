@@ -83,15 +83,6 @@ export default function CategoryFormDialog({
       const weight = parseFloat(formData.weight_percentage)
       if (isNaN(weight) || weight < 0 || weight > 100) {
         newErrors.weight_percentage = 'Bobot harus antara 0 dan 100'
-      } else {
-        // Check if total weight would exceed 100%
-        const otherCategories = existingCategories.filter(c => c.id !== category?.id)
-        const otherWeightsSum = otherCategories.reduce((sum, c) => sum + Number(c.weight_percentage), 0)
-        const totalWeight = otherWeightsSum + weight
-
-        if (Math.abs(totalWeight - 100) > 0.01) {
-          newErrors.weight_percentage = `Total bobot kategori harus sama dengan 100%. Total saat ini akan menjadi ${totalWeight.toFixed(2)}%`
-        }
       }
     }
 
@@ -105,6 +96,22 @@ export default function CategoryFormDialog({
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  function getTotalWeightInfo(): { total: number; isValid: boolean; message: string } {
+    const weight = parseFloat(formData.weight_percentage) || 0
+    const otherCategories = existingCategories.filter(c => c.id !== category?.id)
+    const otherWeightsSum = otherCategories.reduce((sum, c) => sum + Number(c.weight_percentage), 0)
+    const totalWeight = otherWeightsSum + weight
+    const isValid = Math.abs(totalWeight - 100) < 0.01
+
+    return {
+      total: totalWeight,
+      isValid,
+      message: isValid 
+        ? `Total bobot: ${totalWeight.toFixed(2)}% ✓` 
+        : `Total bobot: ${totalWeight.toFixed(2)}% (harus 100%)`
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -213,6 +220,14 @@ export default function CategoryFormDialog({
               {errors.weight_percentage && (
                 <p className="text-sm text-red-600">{errors.weight_percentage}</p>
               )}
+              {formData.weight_percentage && !errors.weight_percentage && (() => {
+                const weightInfo = getTotalWeightInfo()
+                return (
+                  <p className={`text-sm font-medium ${weightInfo.isValid ? 'text-green-600' : 'text-amber-600'}`}>
+                    {weightInfo.message}
+                  </p>
+                )
+              })()}
               <p className="text-xs text-gray-500">
                 Total semua bobot kategori (P1 + P2 + P3) harus sama dengan 100%
               </p>
