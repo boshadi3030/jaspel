@@ -7,23 +7,18 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Copy, Download, Building2 } from 'lucide-react'
-import dynamic from 'next/dynamic'
 import type { 
   KPICategory, 
   KPIIndicator, 
-  KPISubIndicator,
-  KPICategoryWithIndicators,
-  KPIIndicatorWithSubIndicators
+  KPISubIndicator
 } from '@/lib/types/kpi.types'
 
-// Lazy load heavy components
-const KPITree = dynamic(() => import('@/components/kpi/KPITree'), {
-  loading: () => <Skeleton className="h-96 w-full" />
-})
-const CategoryFormDialog = dynamic(() => import('@/components/kpi/CategoryFormDialog'))
-const IndicatorFormDialog = dynamic(() => import('@/components/kpi/IndicatorFormDialog'))
-const SubIndicatorFormDialog = dynamic(() => import('@/components/kpi/SubIndicatorFormDialog'))
-const CopyStructureDialog = dynamic(() => import('@/components/kpi/CopyStructureDialog'))
+// Direct imports instead of dynamic to fix chunk loading issues
+import KPITree from '@/components/kpi/KPITree'
+import CategoryFormDialog from '@/components/kpi/CategoryFormDialog'
+import IndicatorFormDialog from '@/components/kpi/IndicatorFormDialog'
+import SubIndicatorFormDialog from '@/components/kpi/SubIndicatorFormDialog'
+import CopyStructureDialog from '@/components/kpi/CopyStructureDialog'
 
 interface Unit {
   id: string
@@ -46,6 +41,7 @@ export default function KPIConfigPage() {
   const [selectedIndicator, setSelectedIndicator] = useState<KPIIndicator | null>(null)
   const [selectedSubIndicator, setSelectedSubIndicator] = useState<KPISubIndicator | null>(null)
   const [selectedIndicatorForSub, setSelectedIndicatorForSub] = useState<KPIIndicator | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const loadUnits = useCallback(async () => {
     try {
@@ -61,8 +57,9 @@ export default function KPIConfigPage() {
       if (data && data.length > 0 && !selectedUnit) {
         setSelectedUnit(data[0].id)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading units:', error)
+      setError(`Gagal memuat data unit: ${error.message}`)
     } finally {
       setIsLoading(false)
     }
@@ -114,19 +111,22 @@ export default function KPIConfigPage() {
         setIndicators([])
         setSubIndicators([])
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading KPI structure:', error)
+      setError(`Gagal memuat struktur KPI: ${error.message}`)
     } finally {
       setIsLoading(false)
     }
   }, [selectedUnit])
 
   useEffect(() => {
+    setError(null)
     loadUnits()
   }, [loadUnits])
 
   useEffect(() => {
     if (selectedUnit) {
+      setError(null)
       loadKPIStructure()
     }
   }, [selectedUnit, loadKPIStructure])
@@ -289,6 +289,26 @@ export default function KPIConfigPage() {
       <div className="p-6 space-y-6">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-96 w-full" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Terjadi Kesalahan</h2>
+          <p className="text-red-700 mb-4">{error}</p>
+          <Button 
+            onClick={() => {
+              setError(null)
+              loadUnits()
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            Coba Lagi
+          </Button>
+        </div>
       </div>
     )
   }

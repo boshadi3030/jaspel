@@ -115,8 +115,8 @@ export default function IndicatorFormDialog({
       newErrors.weight_percentage = 'Persentase bobot wajib diisi'
     } else {
       const weight = parseFloat(formData.weight_percentage)
-      if (isNaN(weight) || weight <= 0 || weight > 100) {
-        newErrors.weight_percentage = 'Bobot harus antara 0.01 dan 100'
+      if (isNaN(weight) || weight <= 0) {
+        newErrors.weight_percentage = 'Bobot harus lebih besar dari 0'
       } else {
         // Check if total weight would exceed 100%
         const otherIndicators = existingIndicators.filter(i => i.id !== indicator?.id)
@@ -252,7 +252,7 @@ export default function IndicatorFormDialog({
                 id="weight_percentage"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 max="100"
                 value={formData.weight_percentage}
                 onChange={(e) => setFormData({ ...formData, weight_percentage: e.target.value })}
@@ -270,7 +270,7 @@ export default function IndicatorFormDialog({
                 )
               })()}
               <p className="text-xs text-gray-500">
-                Total semua bobot indikator dalam kategori ini harus sama dengan 100%
+                Total semua bobot indikator dalam kategori ini harus sama dengan 100%. Bobot individual bisa kurang dari 100%.
               </p>
             </div>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, Edit, Trash2, Plus, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { KPICategory, KPIIndicator, KPISubIndicator } from '@/lib/types/kpi.types'
@@ -32,10 +32,22 @@ export default function KPITree({
   onEditSubIndicator,
   onDeleteSubIndicator
 }: KPITreeProps) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(categories.map(c => c.id))
-  )
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [expandedIndicators, setExpandedIndicators] = useState<Set<string>>(new Set())
+
+  // Update expanded categories when categories change
+  useEffect(() => {
+    setExpandedCategories(new Set(categories.map(c => c.id)))
+  }, [categories])
+
+  // Update expanded indicators when data changes - auto-expand indicators with sub indicators
+  useEffect(() => {
+    const indicatorsWithSubs = indicators.filter(indicator => 
+      subIndicators.some(sub => sub.indicator_id === indicator.id)
+    )
+    // Force expand all indicators with sub indicators
+    setExpandedIndicators(new Set(indicatorsWithSubs.map(i => i.id)))
+  }, [indicators, subIndicators])
 
   function toggleCategory(categoryId: string) {
     const newExpanded = new Set(expandedCategories)
@@ -208,7 +220,7 @@ export default function KPITree({
                                 {indicatorSubs.length > 0 && (
                                   <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">
                                     <Layers className="h-3 w-3 inline mr-1" />
-                                    {indicatorSubs.length} sub
+                                    {indicatorSubs.length} sub indikator
                                   </span>
                                 )}
                               </div>

@@ -122,8 +122,8 @@ export default function SubIndicatorFormDialog({
             newErrors.weight_percentage = 'Bobot wajib diisi'
         } else {
             const weight = parseFloat(formData.weight_percentage)
-            if (isNaN(weight) || weight <= 0 || weight > 100) {
-                newErrors.weight_percentage = 'Bobot harus antara 0.01 dan 100'
+            if (isNaN(weight) || weight <= 0) {
+                newErrors.weight_percentage = 'Bobot harus lebih besar dari 0'
             } else {
                 // Validate total weight doesn't exceed 100%
                 const others = existingSubIndicators.filter(s => s.id !== subIndicator?.id)
@@ -182,13 +182,11 @@ export default function SubIndicatorFormDialog({
                 if (error) throw error
             } else {
                 // Generate code for new sub indicator
-                const maxCode = Math.max(
-                    ...existingSubIndicators.map(s => {
-                        const match = s.code.match(/(\d+)$/)
-                        return match ? parseInt(match[1]) : 0
-                    }),
-                    0
-                )
+                const existingCodes = existingSubIndicators.map(s => {
+                    const match = s.code.match(/(\d+)$/)
+                    return match ? parseInt(match[1]) : 0
+                })
+                const maxCode = existingCodes.length > 0 ? Math.max(...existingCodes) : 0
                 const newCode = `SUB${String(maxCode + 1).padStart(3, '0')}`
 
                 const { error } = await supabase
@@ -240,7 +238,7 @@ export default function SubIndicatorFormDialog({
                                     id="sub_weight"
                                     type="number"
                                     step="0.01"
-                                    min="0"
+                                    min="0.01"
                                     max="100"
                                     value={formData.weight_percentage}
                                     onChange={(e) => setFormData({ ...formData, weight_percentage: e.target.value })}
@@ -255,6 +253,9 @@ export default function SubIndicatorFormDialog({
                                         </p>
                                     )
                                 })()}
+                                <p className="text-xs text-gray-500">
+                                    Total semua bobot sub indikator dalam indikator ini harus sama dengan 100%. Bobot individual bisa kurang dari 100%.
+                                </p>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="sub_target">Nilai Target</Label>

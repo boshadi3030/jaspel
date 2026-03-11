@@ -72,8 +72,8 @@ export default function CategoryFormDialog({
       newErrors.weight_percentage = 'Persentase bobot wajib diisi'
     } else {
       const weight = parseFloat(formData.weight_percentage)
-      if (isNaN(weight) || weight <= 0 || weight > 100) {
-        newErrors.weight_percentage = 'Bobot harus antara 0.01 dan 100'
+      if (isNaN(weight) || weight <= 0) {
+        newErrors.weight_percentage = 'Bobot harus lebih besar dari 0'
       } else {
         // Check if total weight would exceed 100%
         const otherCategories = existingCategories.filter(c => c.id !== category?.id)
@@ -211,7 +211,7 @@ export default function CategoryFormDialog({
                 id="weight_percentage"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 max="100"
                 value={formData.weight_percentage}
                 onChange={(e) => setFormData({ ...formData, weight_percentage: e.target.value })}
@@ -229,7 +229,7 @@ export default function CategoryFormDialog({
                 )
               })()}
               <p className="text-xs text-gray-500">
-                Total semua bobot kategori (P1 + P2 + P3) harus sama dengan 100%
+                Total semua bobot kategori (P1 + P2 + P3) harus sama dengan 100%. Bobot individual bisa kurang dari 100%.
               </p>
             </div>
 

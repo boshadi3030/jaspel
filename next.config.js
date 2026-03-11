@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output configuration for Vercel
-  output: 'standalone',
-  
-  // Basic experimental features
+  // Experimental features
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb',
@@ -13,7 +10,7 @@ const nextConfig = {
   // Enable React strict mode
   reactStrictMode: true,
   
-  // Skip ESLint during build
+  // Skip ESLint during build to avoid chunk conflicts
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -28,12 +25,14 @@ const nextConfig = {
     unoptimized: true,
   },
   
-  // Disable source maps in production to reduce bundle size
+  // Enable source maps temporarily for debugging
   productionBrowserSourceMaps: false,
   
-  // Simple webpack config
-  webpack: (config, { isServer }) => {
-    // Only add essential fallbacks for client-side
+  // Simplified output configuration
+  output: 'standalone',
+  
+  // Simplified webpack config to prevent chunk loading errors
+  webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -42,8 +41,24 @@ const nextConfig = {
         tls: false,
       }
     }
-    
     return config
+  },
+  
+  // Compress responses
+  compress: true,
+  
+  // Optimize for Vercel deployment
+  poweredByHeader: false,
+  
+  // Redirect configuration
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/login',
+        permanent: false,
+      },
+    ]
   },
 }
 
